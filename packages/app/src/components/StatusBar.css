@@ -1,0 +1,38 @@
+.mqpad-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 26px;
+  padding: 0 12px;
+  background: var(--mqpad-surface-raised);
+  border-top: 1px solid var(--mqpad-border);
+  font-size: 11px;
+  color: var(--mqpad-text-muted);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.mqpad-statusbar-side {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.mqpad-statusbar-side-right {
+  flex-shrink: 0;
+}
+
+.mqpad-statusbar-item {
+  white-space: nowrap;
+  transition: color 0.3s ease;
+}
+
+.mqpad-statusbar-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mqpad-statusbar-dirty {
+  color: var(--mqpad-accent);
+}

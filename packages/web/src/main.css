@@ -1,0 +1,19 @@
+.mqpad-preview-mode {
+  position: relative;
+  height: 100%;
+}
+
+.mqpad-preview-exit {
+  position: fixed;
+  top: 6px;
+  right: 14px;
+  z-index: 10003;
+  background: var(--mqpad-accent, #67b8e3);
+  color: var(--mqpad-accent-contrast, #1e293b);
+  border: none;
+  border-radius: var(--mqpad-radius-sm, 6px);
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}

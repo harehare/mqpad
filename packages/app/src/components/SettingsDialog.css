@@ -1,0 +1,98 @@
+.mqpad-settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.mqpad-settings-dialog {
+  background: var(--mqpad-surface-raised, #292724);
+  border-radius: var(--mqpad-radius);
+  box-shadow: var(--mqpad-shadow);
+  padding: 20px;
+  width: 380px;
+  color: var(--mqpad-text, #d4cfc4);
+}
+
+.mqpad-settings-dialog h2 {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: var(--mqpad-accent);
+}
+
+.mqpad-settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.mqpad-settings-field label {
+  font-size: 12px;
+  color: var(--mqpad-text-muted, #948c80);
+}
+
+.mqpad-settings-field input {
+  background: var(--mqpad-surface-sunken, #181615);
+  border: 1px solid var(--mqpad-border);
+  border-radius: var(--mqpad-radius-sm);
+  color: var(--mqpad-text, #d4cfc4);
+  padding: 8px 10px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.mqpad-settings-field input:focus {
+  border-color: var(--mqpad-accent);
+}
+
+.mqpad-settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.mqpad-settings-actions button {
+  border: 1px solid var(--mqpad-border);
+  border-radius: var(--mqpad-radius-sm);
+  background: transparent;
+  color: var(--mqpad-text, #d4cfc4);
+  padding: 7px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background-color 0.15s ease;
+}
+
+.mqpad-settings-actions button:hover {
+  background: var(--mqpad-accent-soft);
+}
+
+.mqpad-settings-actions button.primary {
+  background: var(--mqpad-accent, #67b8e3);
+  border-color: var(--mqpad-accent, #67b8e3);
+  color: var(--mqpad-accent-contrast, #1e293b);
+  font-weight: 600;
+}
+
+.mqpad-settings-field select {
+  background: var(--mqpad-surface-sunken, #162032);
+  border: 1px solid var(--mqpad-border);
+  border-radius: var(--mqpad-radius-sm);
+  color: var(--mqpad-text, #e2e8f0);
+  padding: 8px 10px;
+  font-size: 13px;
+  outline: none;
+}
+
+.mqpad-settings-field select:focus {
+  border-color: var(--mqpad-accent);
+}
+
+.mqpad-settings-actions button.primary:hover {
+  background: var(--mqpad-accent);
+  filter: brightness(1.08);
+}

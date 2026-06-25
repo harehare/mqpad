@@ -1,0 +1,54 @@
+{
+  "name": "mqpad-app",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Shared mqpad WYSIWYG editor UI (file explorer + Tiptap editor) used by both the web app and the VS Code extension webview",
+  "license": "MIT",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "lint": "oxlint .",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@shikijs/langs": "^4.2.0",
+    "@tiptap/core": "^3.27.1",
+    "@tiptap/extension-code-block": "^3.27.1",
+    "@tiptap/extension-table": "^3.27.1",
+    "@tiptap/extension-table-cell": "^3.27.1",
+    "@tiptap/extension-table-header": "^3.27.1",
+    "@tiptap/extension-table-row": "^3.27.1",
+    "@tiptap/extension-task-item": "^3.27.1",
+    "@tiptap/extension-task-list": "^3.27.1",
+    "@tiptap/extensions": "^3.27.1",
+    "@tiptap/pm": "^3.27.1",
+    "@tiptap/react": "^3.27.1",
+    "@tiptap/starter-kit": "^3.27.1",
+    "@tiptap/suggestion": "^3.27.1",
+    "katex": "^0.17.0",
+    "markdown-it": "^14.1.0",
+    "mermaid": "^11.15.0",
+    "prosemirror-markdown": "^1.13.4",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-icons": "^5.6.0",
+    "shiki": "^4.2.0",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@types/katex": "^0.16.8",
+    "@types/markdown-it": "^14.1.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "happy-dom": "^16.8.1",
+    "oxlint": "^1.70.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

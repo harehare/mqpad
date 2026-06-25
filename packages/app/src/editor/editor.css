@@ -1,0 +1,616 @@
+.mqpad-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  /* No backdrop-filter here (unlike the titlebar/tab bar) - this sits
+     directly above text that reflows on every keystroke, and blurring a
+     constantly-reflowing backdrop forces the browser to keep recompositing
+     it, which showed up as visible flicker while typing. A solid-ish
+     background is enough to read as "above the content". */
+  background: var(--mqpad-surface);
+  border-bottom: 1px solid var(--mqpad-border);
+}
+
+.mqpad-toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 10px;
+  overflow-x: auto;
+}
+
+.mqpad-toolbar-row-table {
+  border-top: 1px solid var(--mqpad-border);
+}
+
+.mqpad-toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  border-radius: var(--mqpad-radius-sm);
+  color: var(--mqpad-text-muted);
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.mqpad-toolbar-btn:hover:not(:disabled) {
+  background: var(--mqpad-accent-soft);
+  color: var(--mqpad-text);
+}
+
+.mqpad-toolbar-btn.active {
+  background: var(--mqpad-accent-soft);
+  color: var(--mqpad-accent);
+}
+
+.mqpad-toolbar-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.mqpad-toolbar-divider {
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: var(--mqpad-border);
+  flex-shrink: 0;
+}
+
+.mqpad-toolbar-spacer {
+  flex: 1;
+}
+
+.mqpad-toolbar-popover {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--mqpad-border);
+}
+
+.mqpad-toolbar-popover-input {
+  flex: 1;
+  background: var(--mqpad-surface-sunken);
+  border: 1px solid var(--mqpad-border);
+  border-radius: var(--mqpad-radius-sm);
+  color: var(--mqpad-text);
+  padding: 6px 10px;
+  font-size: 13px;
+  outline: none;
+}
+
+.mqpad-toolbar-popover-input:focus {
+  border-color: var(--mqpad-accent);
+}
+
+.mqpad-toolbar-popover-apply {
+  background: var(--mqpad-accent);
+  color: var(--mqpad-accent-contrast);
+  border: none;
+  border-radius: var(--mqpad-radius-sm);
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mqpad-query-console {
+  border-top: 1px solid var(--mqpad-border);
+  padding: 10px;
+}
+
+.mqpad-query-console-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.mqpad-query-console-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--mqpad-text-muted);
+}
+
+.mqpad-query-console-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--mqpad-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--mqpad-radius-sm);
+}
+
+.mqpad-query-console-close:hover {
+  background: var(--mqpad-accent-soft);
+  color: var(--mqpad-text);
+}
+
+.mqpad-query-console-input {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  background: var(--mqpad-surface-sunken);
+  border: 1px solid var(--mqpad-border);
+  border-radius: var(--mqpad-radius-sm);
+  color: var(--mqpad-text);
+  font-family: var(--mqpad-mono-font, ui-monospace, monospace);
+  font-size: 13px;
+  padding: 8px 10px;
+  outline: none;
+}
+
+.mqpad-query-console-input:focus {
+  border-color: var(--mqpad-accent);
+}
+
+.mqpad-query-console-result {
+  margin-top: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: var(--mqpad-mono-font, ui-monospace, monospace);
+  font-size: 13px;
+  color: var(--mqpad-text);
+}
+
+.mqpad-query-console-result pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.mqpad-query-console-status {
+  color: var(--mqpad-text-muted);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.mqpad-query-console-error {
+  color: var(--mqpad-error);
+  font-size: 12px;
+}
+
+.mqpad-editor-area .tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--mqpad-text-muted);
+  opacity: 0.7;
+}
+
+.mqpad-editor-area .tiptap pre {
+  position: relative;
+  margin: 1em 0;
+  padding: 14px 16px 14px 3.4em;
+  border-radius: var(--mqpad-radius, 10px);
+  background: var(--shiki-background, var(--mqpad-surface-sunken));
+  box-shadow: inset 0 0 0 1px var(--mqpad-border);
+  overflow-x: auto;
+}
+
+.mqpad-code-linenumbers {
+  position: absolute;
+  top: 14px;
+  left: 0;
+  width: 2.6em;
+  text-align: right;
+  padding-right: 0.7em;
+  color: var(--mqpad-text-muted);
+  opacity: 0.55;
+  user-select: none;
+  font-family: var(--mqpad-mono-font, ui-monospace, monospace);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.mqpad-code-linenumbers div {
+  height: 1.6em;
+}
+
+.mqpad-editor-area .tiptap pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-family: var(--mqpad-mono-font, ui-monospace, monospace);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--shiki-foreground, var(--mqpad-text));
+  white-space: pre;
+}
+
+.mqpad-wikilink {
+  color: var(--mqpad-accent, #d08a52);
+  background: var(--mqpad-accent-soft, rgba(208, 138, 82, 0.16));
+  border-radius: var(--mqpad-radius-sm, 6px);
+  padding: 0.05em 0.4em;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.mqpad-wikilink:hover {
+  background: rgba(208, 138, 82, 0.28);
+}
+
+.mqpad-mq-block {
+  border-radius: var(--mqpad-radius, 10px);
+  margin: 1em 0;
+  background: var(--mqpad-surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--mqpad-border);
+  overflow: hidden;
+  transition: box-shadow 0.15s ease;
+}
+
+.mqpad-mq-block-editing {
+  box-shadow:
+    inset 0 0 0 1px var(--mqpad-border),
+    0 0 0 1px var(--mqpad-accent-soft),
+    0 0 16px -4px var(--mqpad-accent-soft);
+}
+
+.mqpad-mq-block-tag {
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--mqpad-accent);
+  font-family: var(--mqpad-mono-font);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* Display mode: a clickable "card" showing the last evaluated result (or a
+   hint, while editing/evaluating hasn't happened yet). Click anywhere to
+   switch to edit mode and see the raw query instead. */
+.mqpad-mq-block-preview {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--mqpad-prose-font);
+  font-size: 16px;
+  color: var(--mqpad-text);
+  padding: 14px 16px;
+  transition: background-color 0.12s ease;
+}
+
+.mqpad-mq-block-preview:hover {
+  background: var(--mqpad-accent-soft);
+}
+
+.mqpad-mq-block-status {
+  color: var(--mqpad-text-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.mqpad-mq-block-result {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The result is rendered markdown (headings, lists, tables, ...), not raw
+   text - drop the leading/trailing block's margin so it doesn't add extra
+   space on top of the preview row's own padding. */
+.mqpad-mq-block-result > :first-child {
+  margin-top: 0;
+}
+
+.mqpad-mq-block-result > :last-child {
+  margin-bottom: 0;
+}
+
+/* Edit mode: toolbar + raw query textarea. */
+.mqpad-mq-block-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--mqpad-accent-soft);
+}
+
+.mqpad-mq-block-hint {
+  font-size: 11px;
+  color: var(--mqpad-text-muted);
+}
+
+.mqpad-mq-block-query-wrap {
+  position: relative;
+}
+
+.mqpad-mq-block-query-highlight {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.mqpad-mq-block-query-highlight pre.shiki {
+  margin: 0;
+  padding: 10px 16px 14px;
+  background: transparent !important;
+  /* Reset what the generic `.tiptap pre` code-block styling (border-radius,
+     box-shadow) would otherwise also apply here, since this is a Shiki
+     <pre> too - that's what doubled the frame around the query textarea. */
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+  font-family: var(--mqpad-mono-font, ui-monospace, monospace);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.mqpad-mq-block-query {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--mqpad-text);
+  font-family: var(--mqpad-mono-font, ui-monospace, monospace);
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px 16px 14px;
+}
+
+.mqpad-mq-block-error {
+  color: var(--mqpad-error, #e08a73);
+  padding: 6px 16px 12px;
+  font-size: 12px;
+}
+
+.mqpad-source-view {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--mqpad-page-width);
+  height: 100%;
+  min-height: 100%;
+  margin: 0 auto;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--mqpad-text);
+  font-family: var(--mqpad-mono-font);
+  font-size: 14px;
+  line-height: 1.7;
+  padding: 44px 60px;
+}
+
+.mqpad-mermaid-block,
+.mqpad-math-block {
+  border-radius: var(--mqpad-radius, 10px);
+  margin: 1em 0;
+  background: var(--mqpad-surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--mqpad-border);
+  overflow: hidden;
+}
+
+.mqpad-mermaid-block-preview,
+.mqpad-math-block-preview {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+
+.mqpad-mermaid-block-preview:hover,
+.mqpad-math-block-preview:hover {
+  background: var(--mqpad-accent-soft);
+}
+
+.mqpad-mermaid-block-preview svg {
+  max-width: 100%;
+}
+
+.mqpad-math-block-preview .katex-display {
+  margin: 0;
+}
+
+.mqpad-mermaid-block-error,
+.mqpad-math-block-error {
+  color: var(--mqpad-error, #e08a73);
+  font-family: var(--mqpad-mono-font);
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+.mqpad-mermaid-block-toolbar,
+.mqpad-math-block-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--mqpad-accent-soft);
+}
+
+.mqpad-mermaid-block-tag,
+.mqpad-math-block-tag {
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--mqpad-accent);
+  font-family: var(--mqpad-mono-font);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.mqpad-mermaid-block-hint,
+.mqpad-math-block-hint {
+  font-size: 11px;
+  color: var(--mqpad-text-muted);
+}
+
+.mqpad-slash-menu {
+  position: fixed;
+  z-index: 10002;
+  min-width: 220px;
+  overflow-y: auto;
+  background: var(--mqpad-surface-raised);
+  border: 1px solid var(--mqpad-border);
+  border-radius: var(--mqpad-radius);
+  box-shadow: var(--mqpad-shadow);
+  padding: 6px;
+}
+
+.mqpad-slash-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: var(--mqpad-radius-sm);
+  color: var(--mqpad-text);
+  text-align: left;
+  padding: 7px 9px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.mqpad-slash-menu-item:hover,
+.mqpad-slash-menu-item.active {
+  background: var(--mqpad-accent-soft);
+}
+
+.mqpad-slash-menu-item-hint {
+  flex-shrink: 0;
+  color: var(--mqpad-text-muted);
+  font-size: 11px;
+  font-family: var(--mqpad-mono-font);
+}
+
+.mqpad-slash-menu-empty {
+  padding: 8px 9px;
+  color: var(--mqpad-text-muted);
+  font-size: 12px;
+}
+
+.mqpad-mermaid-block-source,
+.mqpad-math-block-source {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--mqpad-text);
+  font-family: var(--mqpad-mono-font);
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px 16px 14px;
+}
+
+/* GFM task lists - the checkbox is rendered by TaskItem's own node view. */
+.mqpad-editor-area .tiptap ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0.2em;
+}
+
+.mqpad-editor-area .tiptap ul[data-type="taskList"] li {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.mqpad-editor-area .tiptap ul[data-type="taskList"] li > label {
+  flex: 0 0 auto;
+  user-select: none;
+}
+
+.mqpad-editor-area .tiptap ul[data-type="taskList"] li > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.mqpad-editor-area .tiptap ul[data-type="taskList"] li > div > p {
+  margin: 0;
+}
+
+.mqpad-editor-area .tiptap ul[data-type="taskList"] input[type="checkbox"] {
+  width: 1em;
+  height: 1em;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--mqpad-accent);
+}
+
+.mqpad-editor-area .tiptap ul[data-type="taskList"] li[data-checked="true"] > div {
+  color: var(--mqpad-text-muted);
+  text-decoration: line-through;
+}
+
+/* GFM tables. */
+.mqpad-editor-area .tiptap .tableWrapper {
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.mqpad-editor-area .tiptap table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 0;
+}
+
+.mqpad-editor-area .tiptap table td,
+.mqpad-editor-area .tiptap table th {
+  position: relative;
+  border: 1px solid var(--mqpad-border);
+  padding: 6px 10px;
+  vertical-align: top;
+  min-width: 1em;
+}
+
+.mqpad-editor-area .tiptap table td > p,
+.mqpad-editor-area .tiptap table th > p {
+  margin: 0;
+}
+
+.mqpad-editor-area .tiptap table th {
+  background: var(--mqpad-surface-sunken);
+  font-weight: 600;
+  text-align: left;
+}
+
+.mqpad-editor-area .tiptap table td.selectedCell,
+.mqpad-editor-area .tiptap table th.selectedCell {
+  background: var(--mqpad-accent-soft);
+}
+
+.mqpad-editor-area .tiptap table .column-resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: -2px;
+  right: -2px;
+  width: 4px;
+  background-color: var(--mqpad-accent);
+  pointer-events: none;
+}
+
+.mqpad-editor-area .tiptap.resize-cursor {
+  cursor: col-resize;
+}

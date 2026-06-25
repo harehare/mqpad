@@ -1,0 +1,21 @@
+{
+  "name": "mqpad",
+  "private": true,
+  "version": "0.1.0",
+  "description": "A WYSIWYG Markdown editor with Obsidian-style links and live mq code blocks",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r --if-present build",
+    "dev:web": "pnpm --filter mqpad-web dev",
+    "dev:extension": "pnpm --filter mqpad-vscode-extension watch",
+    "test": "pnpm -r --if-present test",
+    "lint": "pnpm -r --if-present lint",
+    "type-check": "pnpm -r --if-present type-check"
+  },
+  "devDependencies": {
+    "oxlint": "^1.70.0",
+    "typescript": "^6.0.3"
+  },
+  "packageManager": "pnpm@10.33.0"
+}

@@ -1,0 +1,94 @@
+:root {
+  /* Tarn (https://github.com/harehare/tarn-theme) - the default theme.
+     Overridden at runtime by useTheme() based on the user's choice; these
+     are also the first-paint fallback before that effect runs. */
+  --mqpad-bg: #1e293b;
+  --mqpad-surface: #1e293b;
+  --mqpad-surface-raised: #2a3444;
+  --mqpad-surface-sunken: #162032;
+  --mqpad-tree-bg: #1e293b;
+  --mqpad-tree-title: #94a3b8;
+  --mqpad-tree-item-hover: #2a3444;
+  --mqpad-tree-item-selected: #32404f;
+  --mqpad-border: #4a5568;
+  --mqpad-text: #e2e8f0;
+  --mqpad-text-muted: #94a3b8;
+  --mqpad-accent: #67b8e3;
+  --mqpad-accent-soft: rgba(103, 184, 227, 0.16);
+  --mqpad-accent-contrast: #1e293b;
+  --mqpad-context-menu-bg: #232e3d;
+  --mqpad-context-menu-hover-bg: #32404f;
+  --mqpad-error: #fc8181;
+
+  /* Shiki css-variables theme (see highlight/highlighter.ts) - per-theme
+     values are applied at runtime by theme/useTheme.ts; this is just the
+     Tarn fallback for first paint. */
+  --shiki-foreground: #e2e8f0;
+  --shiki-background: #162032;
+  --shiki-token-keyword: #67b8e3;
+  --shiki-token-string: #9ece6a;
+  --shiki-token-string-expression: #9ece6a;
+  --shiki-token-comment: #94a3b8;
+  --shiki-token-function: #e0af68;
+  --shiki-token-parameter: #e2e8f0;
+  --shiki-token-constant: #bb9af7;
+  --shiki-token-punctuation: #94a3b8;
+  --shiki-token-link: #67b8e3;
+  --shiki-token-inserted: #4caf50;
+  --shiki-token-deleted: #f44336;
+  --shiki-token-changed: #e0af68;
+
+  --mqpad-radius-sm: 6px;
+  --mqpad-radius: 10px;
+  --mqpad-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --mqpad-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+
+  --mqpad-ui-font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mqpad-prose-font: "Iowan Old Style", "Palatino Linotype", "Georgia", serif;
+  --mqpad-mono-font: ui-monospace, "SF Mono", Consolas, monospace;
+
+  /* Overridden at runtime by usePreferences() based on the user's choice. */
+  --mqpad-page-width: 780px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--mqpad-bg);
+  color: var(--mqpad-text);
+  font-family: var(--mqpad-ui-font);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+/* Thin, theme-aware scrollbars everywhere instead of the OS default. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--mqpad-border) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--mqpad-border);
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--mqpad-text-muted);
+}

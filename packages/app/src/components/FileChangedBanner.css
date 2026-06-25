@@ -1,0 +1,53 @@
+.file-changed-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 12px;
+  background: var(--mqpad-accent-soft);
+  border-bottom: 1px solid var(--mqpad-border);
+  font-size: 12px;
+  color: var(--mqpad-text);
+  flex-shrink: 0;
+}
+
+.file-changed-banner-message {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-changed-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.file-changed-banner-button {
+  background: transparent;
+  border: 1px solid var(--mqpad-accent);
+  color: var(--mqpad-accent);
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.file-changed-banner-button:hover {
+  background: var(--mqpad-accent-soft);
+}
+
+.file-changed-banner-dismiss {
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: var(--mqpad-text-muted);
+  cursor: pointer;
+  padding: 2px;
+}
+
+.file-changed-banner-dismiss:hover {
+  color: var(--mqpad-text);
+}

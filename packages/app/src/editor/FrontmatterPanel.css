@@ -1,0 +1,174 @@
+.mqpad-frontmatter {
+  border-bottom: 1px solid var(--mqpad-border);
+  background: var(--mqpad-surface);
+}
+
+.mqpad-frontmatter-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--mqpad-text-muted);
+  cursor: pointer;
+}
+
+.mqpad-frontmatter-header:hover {
+  color: var(--mqpad-text);
+}
+
+.mqpad-frontmatter-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 10px 10px;
+}
+
+.mqpad-frontmatter-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mqpad-frontmatter-key,
+.mqpad-frontmatter-type,
+.mqpad-frontmatter-value {
+  background: var(--mqpad-surface-sunken);
+  border: 1px solid var(--mqpad-border);
+  border-radius: var(--mqpad-radius-sm);
+  color: var(--mqpad-text);
+  padding: 5px 8px;
+  font-size: 12px;
+  outline: none;
+}
+
+.mqpad-frontmatter-key:focus,
+.mqpad-frontmatter-type:focus,
+.mqpad-frontmatter-value:focus {
+  border-color: var(--mqpad-accent);
+}
+
+.mqpad-frontmatter-key {
+  flex: 1 1 120px;
+  min-width: 0;
+}
+
+.mqpad-frontmatter-type {
+  flex: 0 0 88px;
+}
+
+.mqpad-frontmatter-value {
+  flex: 2 1 160px;
+  min-width: 0;
+}
+
+.mqpad-frontmatter-unsupported {
+  resize: vertical;
+  font-family: var(--mqpad-mono-font, ui-monospace, monospace);
+  color: var(--mqpad-text-muted);
+}
+
+.mqpad-frontmatter-boolean {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 2 1 160px;
+  font-size: 12px;
+  color: var(--mqpad-text);
+}
+
+.mqpad-frontmatter-array {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 2 1 160px;
+  min-width: 0;
+  background: var(--mqpad-surface-sunken);
+  border: 1px solid var(--mqpad-border);
+  border-radius: var(--mqpad-radius-sm);
+  padding: 3px 6px;
+}
+
+.mqpad-frontmatter-array:focus-within {
+  border-color: var(--mqpad-accent);
+}
+
+.mqpad-frontmatter-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--mqpad-accent-soft);
+  color: var(--mqpad-text);
+  border-radius: var(--mqpad-radius-sm);
+  padding: 2px 6px;
+  font-size: 12px;
+}
+
+.mqpad-frontmatter-chip button {
+  background: none;
+  border: none;
+  color: var(--mqpad-text-muted);
+  cursor: pointer;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.mqpad-frontmatter-chip button:hover {
+  color: var(--mqpad-text);
+}
+
+.mqpad-frontmatter-array-input {
+  flex: 1 1 60px;
+  min-width: 60px;
+  background: none;
+  border: none;
+  color: var(--mqpad-text);
+  font-size: 12px;
+  outline: none;
+}
+
+.mqpad-frontmatter-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  background: none;
+  border: none;
+  border-radius: var(--mqpad-radius-sm);
+  color: var(--mqpad-text-muted);
+  cursor: pointer;
+}
+
+.mqpad-frontmatter-remove:hover {
+  background: var(--mqpad-accent-soft);
+  color: var(--mqpad-text);
+}
+
+.mqpad-frontmatter-add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  background: none;
+  border: 1px dashed var(--mqpad-border);
+  border-radius: var(--mqpad-radius-sm);
+  color: var(--mqpad-text-muted);
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.mqpad-frontmatter-add:hover {
+  border-color: var(--mqpad-accent);
+  color: var(--mqpad-text);
+}

@@ -1,0 +1,235 @@
+.mqpad-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.mqpad-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 42px;
+  padding: 0 14px;
+  background: color-mix(in srgb, var(--mqpad-surface-raised) 72%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--mqpad-border);
+  flex-shrink: 0;
+}
+
+.mqpad-titlebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mqpad-titlebar-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--mqpad-text);
+}
+
+.mqpad-titlebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.mqpad-titlebar-settings {
+  background: none;
+  border: none;
+  color: var(--mqpad-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 6px;
+  border-radius: var(--mqpad-radius-sm);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.mqpad-titlebar-settings:hover {
+  background: var(--mqpad-accent-soft);
+  color: var(--mqpad-accent);
+}
+
+.mqpad-titlebar-settings.active {
+  background: var(--mqpad-accent-soft);
+  color: var(--mqpad-accent);
+}
+
+/* Distraction-free writing: fade the sidebar/tab bar/titlebar/status bar out
+   of the way, leaving just the editor. They're not removed from the layout
+   (so toggling back doesn't reflow the editor width) - just faded and made
+   non-interactive until hovered, so a stray cursor move can still reach
+   them without leaving focus mode. */
+.mqpad-focus-mode .mqpad-sidebar,
+.mqpad-focus-mode .mqpad-titlebar,
+.mqpad-focus-mode .tab-bar,
+.mqpad-focus-mode .mqpad-statusbar {
+  opacity: 0.06;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.mqpad-focus-mode .mqpad-sidebar:hover,
+.mqpad-focus-mode .mqpad-sidebar:focus-within,
+.mqpad-focus-mode .mqpad-titlebar:hover,
+.mqpad-focus-mode .mqpad-titlebar:focus-within,
+.mqpad-focus-mode .tab-bar:hover,
+.mqpad-focus-mode .mqpad-statusbar:hover {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mqpad-focus-mode .mqpad-editor-area .tiptap,
+.mqpad-focus-mode .mqpad-source-view {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.mqpad-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.mqpad-sidebar {
+  width: 250px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--mqpad-border);
+}
+
+.mqpad-sidebar-hidden {
+  display: none;
+}
+
+.mqpad-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--mqpad-surface);
+}
+
+.mqpad-editor-area {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.mqpad-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  height: 100%;
+  color: var(--mqpad-text-muted);
+  padding: 32px;
+  text-align: center;
+  font-family: var(--mqpad-prose-font);
+  font-size: 15px;
+  opacity: 0.8;
+}
+
+.mqpad-empty-state p {
+  margin: 0;
+}
+
+/* No card/frame - the writing surface just fills the available area and
+   blends into the panel background, so there's no border competing for
+   attention while editing. */
+.mqpad-editor-area .tiptap {
+  outline: none;
+  min-height: 100%;
+  max-width: var(--mqpad-page-width);
+  margin: 0 auto;
+  padding: 44px 60px;
+  font-family: var(--mqpad-prose-font);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.mqpad-editor-area .tiptap h1,
+.mqpad-editor-area .tiptap h2,
+.mqpad-editor-area .tiptap h3 {
+  font-family: var(--mqpad-prose-font);
+  color: var(--mqpad-text);
+  font-weight: 700;
+}
+
+.mqpad-editor-area .tiptap h1 {
+  font-size: 1.9em;
+  line-height: 1.25;
+  margin: 0.2em 0 0.6em;
+}
+
+.mqpad-editor-area .tiptap h2 {
+  font-size: 1.4em;
+  line-height: 1.3;
+  margin: 1.4em 0 0.5em;
+}
+
+.mqpad-editor-area .tiptap h3 {
+  font-size: 1.15em;
+  margin: 1.2em 0 0.4em;
+}
+
+.mqpad-editor-area .tiptap h1:first-child,
+.mqpad-editor-area .tiptap h2:first-child,
+.mqpad-editor-area .tiptap h3:first-child {
+  margin-top: 0;
+}
+
+.mqpad-editor-area .tiptap p {
+  margin: 0.7em 0;
+}
+
+.mqpad-editor-area .tiptap ul,
+.mqpad-editor-area .tiptap ol {
+  margin: 0.6em 0;
+  padding-left: 1.6em;
+}
+
+.mqpad-editor-area .tiptap li {
+  margin: 0.25em 0;
+}
+
+.mqpad-editor-area .tiptap li::marker {
+  color: var(--mqpad-accent);
+}
+
+.mqpad-editor-area .tiptap hr {
+  border: none;
+  border-top: 1px solid var(--mqpad-border);
+  margin: 2em 0;
+}
+
+.mqpad-editor-area .tiptap strong {
+  color: var(--mqpad-text);
+  font-weight: 700;
+}
+
+.mqpad-editor-area .tiptap a {
+  color: var(--mqpad-accent);
+}
+
+.mqpad-editor-area .tiptap a:hover {
+  text-decoration: underline;
+}
+
+.mqpad-editor-area .tiptap blockquote {
+  border-left: 3px solid var(--mqpad-accent);
+  margin: 1em 0;
+  padding: 0.1em 0 0.1em 16px;
+  color: var(--mqpad-text-muted);
+  font-style: italic;
+}
+
+.mqpad-editor-area .tiptap code {
+  background: var(--mqpad-surface-sunken);
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+  font-family: var(--mqpad-mono-font);
+  font-size: 0.9em;
+}

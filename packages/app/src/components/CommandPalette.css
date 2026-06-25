@@ -1,0 +1,78 @@
+.mqpad-palette-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 14vh;
+  z-index: 10001;
+}
+
+.mqpad-palette {
+  background: var(--mqpad-surface-raised);
+  border: 1px solid var(--mqpad-border);
+  border-radius: var(--mqpad-radius);
+  box-shadow: var(--mqpad-shadow);
+  width: 480px;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mqpad-palette-input {
+  background: var(--mqpad-surface-sunken);
+  border: none;
+  border-bottom: 1px solid var(--mqpad-border);
+  color: var(--mqpad-text);
+  padding: 14px 16px;
+  font-size: 15px;
+  outline: none;
+}
+
+.mqpad-palette-list {
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.mqpad-palette-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: var(--mqpad-radius-sm);
+  color: var(--mqpad-text);
+  text-align: left;
+  padding: 9px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.mqpad-palette-item:hover,
+.mqpad-palette-item.active {
+  background: var(--mqpad-accent-soft);
+}
+
+.mqpad-palette-item-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mqpad-palette-item-hint {
+  flex-shrink: 0;
+  color: var(--mqpad-text-muted);
+  font-size: 11px;
+}
+
+.mqpad-palette-empty {
+  padding: 16px;
+  color: var(--mqpad-text-muted);
+  font-size: 13px;
+  text-align: center;
+}

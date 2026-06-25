@@ -1,0 +1,89 @@
+{
+  "name": "mqpad-vscode-extension",
+  "displayName": "mqpad",
+  "description": "A WYSIWYG Markdown editor with Obsidian-style links and live mq code blocks",
+  "private": true,
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "publisher": "harehare",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/harehare/mqpad.git"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [],
+  "main": "./dist/extension.cjs",
+  "contributes": {
+    "commands": [
+      {
+        "command": "mqpad.open",
+        "title": "mqpad: Open"
+      },
+      {
+        "command": "mqpad.openFile",
+        "title": "Open in mqpad"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "mqpad.openFile",
+          "when": "resourceExtname == .md || resourceExtname == .markdown",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "mqpad",
+      "properties": {
+        "mqpad.vaultPath": {
+          "type": "string",
+          "default": "",
+          "description": "Folder mqpad treats as its vault root, relative to the workspace folder. Empty means the workspace root."
+        }
+      }
+    },
+    "customEditors": [
+      {
+        "viewType": "mqpad.preview",
+        "displayName": "mqpad",
+        "selector": [{ "filenamePattern": "*.md" }],
+        "priority": "option"
+      }
+    ]
+  },
+  "scripts": {
+    "build:extension": "esbuild src/extension.ts --bundle --platform=node --target=node18 --format=cjs --external:vscode --outfile=dist/extension.cjs",
+    "build:webview": "vite build",
+    "build": "pnpm run build:webview && pnpm run build:extension",
+    "watch": "pnpm run build:webview && esbuild src/extension.ts --bundle --platform=node --target=node18 --format=cjs --external:vscode --outfile=dist/extension.cjs --watch",
+    "vscode:prepublish": "pnpm run build",
+    "package": "vsce package --no-dependencies",
+    "lint": "oxlint .",
+    "type-check": "tsc -p tsconfig.json --noEmit && tsc -p webview/tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "ignore": "^7.0.5",
+    "mq-web": "^0.6.3",
+    "mqpad-app": "workspace:*",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@types/vscode": "^1.90.0",
+    "@vitejs/plugin-react": "^6.0.2",
+    "@vscode/vsce": "^3.6.2",
+    "esbuild": "^0.27.0",
+    "oxlint": "^1.70.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16"
+  }
+}

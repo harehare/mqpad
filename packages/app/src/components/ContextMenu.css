@@ -1,0 +1,49 @@
+.context-menu {
+  position: fixed;
+  background-color: var(--mqpad-context-menu-bg, #2a2826);
+  border-radius: var(--mqpad-radius);
+  box-shadow: var(--mqpad-shadow);
+  padding: 6px;
+  min-width: 200px;
+  z-index: 10000;
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--mqpad-text, #d4cfc4);
+  border-radius: var(--mqpad-radius-sm);
+  transition: background-color 0.12s ease;
+}
+
+.context-menu-item:hover:not(.disabled) {
+  background-color: var(--mqpad-context-menu-hover-bg, #37373d);
+  color: var(--mqpad-accent);
+}
+
+.context-menu-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.context-menu-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
+.context-menu-label {
+  flex: 1;
+}
+
+.context-menu-separator {
+  height: 1px;
+  background-color: var(--mqpad-border, #3e3e42);
+  margin: 6px 4px;
+}
