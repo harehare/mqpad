@@ -94,15 +94,6 @@ Run tests/typecheck/lint across every package with `pnpm test` / `pnpm type-chec
 - **Text direction**: left-to-right or right-to-left.
 - **Vault root** — Web: the OPFS vault folder name, changeable from Settings (persisted in `localStorage`, takes effect on reload). VS Code: the `mqpad.vaultPath` setting (relative to the workspace folder; empty means the workspace root) - the in-app Settings dialog opens VS Code's native settings UI for it.
 
-## Known v1 limitations
-
-- No backlinks panel or graph view.
-- No git integration or AI-CLI-agent editing built in (the external change detection above covers content edited via those tools outside mqpad, but it doesn't drive them itself).
-- No OPFS import/export - a web vault can't be moved out of the browser's storage sandbox yet.
-- No multi-pane editing or full-vault content search (the file tree only filters by name).
-- Lists round-trip as "tight" (no blank line between items) regardless of how they were originally written.
-- Not published to the VS Code Marketplace; load it via `--extensionDevelopmentPath` (F5) only.
-
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
