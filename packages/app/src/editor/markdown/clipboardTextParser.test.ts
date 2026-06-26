@@ -9,6 +9,7 @@ import { TaskItem } from "@tiptap/extension-task-item";
 import { EditorState, type Transaction } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 import { describe, expect, it } from "vitest";
+import { Image } from "../extensions/Image";
 import { MathBlock } from "../extensions/MathBlock";
 import { MqCodeBlock } from "../extensions/MqCodeBlock";
 import { WikiLink } from "../extensions/WikiLink";
@@ -16,6 +17,7 @@ import { clipboardTextParser, handleMarkdownPaste } from "./clipboardTextParser"
 
 const schema = getSchema([
   StarterKit,
+  Image,
   WikiLink,
   MqCodeBlock,
   MathBlock,

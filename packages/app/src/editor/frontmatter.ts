@@ -32,7 +32,7 @@ export function parseFrontmatter(markdown: string): ParsedMarkdown {
 /** Reassembles a markdown document from frontmatter data (or none) and a body. */
 export function stringifyFrontmatter(data: FrontmatterData | null, body: string): string {
   if (!data || Object.keys(data).length === 0) return body;
-  return `---\n${stringifyYaml(data)}---\n\n${body}`;
+  return `---\n${stringifyYaml(data)}---\n${body}`;
 }
 
 /** The form's notion of a field type - drives which input widget a row renders. */
