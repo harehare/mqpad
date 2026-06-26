@@ -4,3 +4,5 @@ allowBuilds:
   '@vscode/vsce-sign': true
   esbuild: true
   keytar: true
+  sharp: true
+  workerd: true
