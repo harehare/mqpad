@@ -97,6 +97,15 @@ export function buildMarkdownParser(schema: Schema): MarkdownParser {
       getAttrs: (tok) => ({ checked: tok.meta?.checked === true }),
     },
 
+    image: {
+      node: "image",
+      getAttrs: (tok) => ({
+        src: tok.attrGet("src"),
+        alt: tok.children?.[0]?.content ?? null,
+        title: tok.attrGet("title") ?? null,
+      }),
+    },
+
     em: { mark: "italic" },
     strong: { mark: "bold" },
     s: { mark: "strike" },
@@ -271,6 +280,16 @@ export function buildMarkdownSerializer(options: MarkdownSerializerOptions = {})
         state.ensureNewLine();
         state.write("$$");
         state.closeBlock(node);
+      },
+      image(state, node) {
+        const { src, alt, title } = node.attrs as {
+          src: string;
+          alt: string | null;
+          title: string | null;
+        };
+        const altText = alt ? state.esc(alt) : "";
+        const titleText = title ? ` ${quote(title)}` : "";
+        state.write(`![${altText}](${state.esc(src)}${titleText})`);
       },
       wikiLink(state, node) {
         const { title, alias } = node.attrs as {

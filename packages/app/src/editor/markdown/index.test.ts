@@ -7,6 +7,7 @@ import { TableCell } from "@tiptap/extension-table-cell";
 import { TaskList } from "@tiptap/extension-task-list";
 import { TaskItem } from "@tiptap/extension-task-item";
 import { describe, expect, it } from "vitest";
+import { Image } from "../extensions/Image";
 import { MathBlock } from "../extensions/MathBlock";
 import { MqCodeBlock } from "../extensions/MqCodeBlock";
 import { WikiLink } from "../extensions/WikiLink";
@@ -14,6 +15,7 @@ import { buildMarkdownParser, buildMarkdownSerializer, serializeToMarkdown } fro
 
 const schema = getSchema([
   StarterKit,
+  Image,
   WikiLink,
   MqCodeBlock,
   MathBlock,
@@ -185,6 +187,31 @@ describe("markdown round-trip", () => {
     });
 
     expect(items).toEqual([false, true]);
+    expect(roundTrip(md)).toBe(md);
+  });
+
+  it("parses an image into an image node and round-trips it", () => {
+    const md = "![alt text](https://example.com/img.png)";
+    const doc = parser.parse(md);
+
+    let found: { src: string; alt: string | null; title: string | null } | null = null;
+    doc.descendants((node) => {
+      if (node.type.name === "image") {
+        found = { src: node.attrs.src, alt: node.attrs.alt, title: node.attrs.title };
+      }
+    });
+
+    expect(found).toEqual({ src: "https://example.com/img.png", alt: "alt text", title: null });
+    expect(roundTrip(md)).toBe(md);
+  });
+
+  it("round-trips an image with a title", () => {
+    const md = '![logo](https://example.com/logo.png "Site Logo")';
+    expect(roundTrip(md)).toBe(md);
+  });
+
+  it("round-trips an image with no alt text", () => {
+    const md = "![](https://example.com/img.png)";
     expect(roundTrip(md)).toBe(md);
   });
 

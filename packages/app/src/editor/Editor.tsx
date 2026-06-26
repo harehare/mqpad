@@ -19,6 +19,7 @@ import { EditorToolbar } from "./EditorToolbar";
 import { FrontmatterPanel } from "./FrontmatterPanel";
 import { dataToRows, parseFrontmatter, rowsToData, stringifyFrontmatter, type FrontmatterRow } from "./frontmatter";
 import { MathBlock } from "./extensions/MathBlock";
+import { Image } from "./extensions/Image";
 import { MqCodeBlock } from "./extensions/MqCodeBlock";
 import { SlashCommand } from "./extensions/SlashCommand";
 import { WikiLink, type WikiLinkOptions } from "./extensions/WikiLink";
@@ -99,6 +100,7 @@ export function MqpadEditor({
   const extensions = useMemo(
     () => [
       StarterKit.configure({ codeBlock: false }),
+      Image,
       CodeBlockWithPreview,
       CodeBlockHighlight,
       MathBlock,
