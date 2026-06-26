@@ -1,4 +1,6 @@
-# mqpad
+<div align="center">
+  <h1>mqpad</h1>
+</div>
 
 A WYSIWYG Markdown editor with Obsidian-style links and live [mq](https://github.com/harehare/mq) query blocks, right inside VS Code.
 
