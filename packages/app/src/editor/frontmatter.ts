@@ -2,7 +2,7 @@ import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 
 export type FrontmatterData = Record<string, unknown>;
 
-const FRONTMATTER_BLOCK = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
+const FRONTMATTER_BLOCK = /^---\r?\n([\s\S]*?)\r?\n---[ \t]*(\r?\n)*/;
 
 export type ParsedMarkdown = {
   /** `null` when the document has no leading frontmatter block, or it isn't a YAML mapping. */
@@ -32,7 +32,7 @@ export function parseFrontmatter(markdown: string): ParsedMarkdown {
 /** Reassembles a markdown document from frontmatter data (or none) and a body. */
 export function stringifyFrontmatter(data: FrontmatterData | null, body: string): string {
   if (!data || Object.keys(data).length === 0) return body;
-  return `---\n${stringifyYaml(data)}---\n${body}`;
+  return `---\n${stringifyYaml(data)}---\n\n${body}`;
 }
 
 /** The form's notion of a field type - drives which input widget a row renders. */
