@@ -2,6 +2,8 @@
 
 A WYSIWYG Markdown editor with Obsidian-style links and live [mq](https://github.com/harehare/mq) query blocks, right inside VS Code.
 
+![mqpad demo: WYSIWYG editing, task lists, slash commands, and a live mq query block](demo.gif)
+
 mqpad opens your notes in a webview-based editor with two signature behaviors:
 
 - **Obsidian-style links** — type `[[Some Note]]` and the target file is created immediately (if it doesn't exist) and turned into a clickable link.
