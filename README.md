@@ -4,6 +4,15 @@
   <h1>mqpad</h1>
 
   **A WYSIWYG Markdown editor with live <a href="https://github.com/harehare/mq">mq</a> queries built in.**
+
+  <p>
+    <a href="https://marketplace.visualstudio.com/items?itemName=harehare.mqpad-vscode-extension">
+      <img src="https://vsmarketplacebadges.dev/version/harehare.mqpad-vscode-extension.svg?label=VS%20Code%20Marketplace&logo=visual-studio-code" alt="VS Code Marketplace" />
+    </a>
+    <a href="LICENSE">
+      <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
+    </a>
+  </p>
 </div>
 
 <p align="center">
