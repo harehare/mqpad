@@ -6,11 +6,14 @@
   **A WYSIWYG Markdown editor with live <a href="https://github.com/harehare/mq">mq</a> queries built in.**
 
   <p>
+    <a href="https://github.com/harehare/mqpad/actions/workflows/ci.yml">
+      <img src="https://img.shields.io/github/actions/workflow/status/harehare/mqpad/ci.yml?style=flat-square&logo=github-actions&label=ci" alt="CI" />
+    </a>
     <a href="https://marketplace.visualstudio.com/items?itemName=harehare.mqpad-vscode-extension">
-      <img src="https://vsmarketplacebadges.dev/version/harehare.mqpad-vscode-extension.svg?label=VS%20Code%20Marketplace&logo=visual-studio-code" alt="VS Code Marketplace" />
+      <img src="https://img.shields.io/badge/VS%20Code-Marketplace-007ACC?style=flat-square&logo=visualstudiocode&logoColor=white" alt="VS Code Marketplace" />
     </a>
     <a href="LICENSE">
-      <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
+      <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="License: MIT" />
     </a>
   </p>
 </div>
