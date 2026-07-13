@@ -3,7 +3,7 @@
   "displayName": "mqpad",
   "description": "A WYSIWYG Markdown editor with Obsidian-style links and live mq code blocks",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "type": "module",
   "publisher": "harehare",
@@ -15,7 +15,26 @@
   "engines": {
     "vscode": "^1.90.0"
   },
-  "categories": ["Other"],
+  "categories": ["Other", "Notebooks", "Visualization"],
+  "keywords": [
+    "markdown",
+    "wysiwyg",
+    "editor",
+    "notes",
+    "note-taking",
+    "obsidian",
+    "wiki-links",
+    "knowledge-base",
+    "pkm",
+    "mq",
+    "query",
+    "mermaid",
+    "katex",
+    "math",
+    "frontmatter",
+    "vault",
+    "gfm"
+  ],
   "activationEvents": [],
   "main": "./dist/extension.cjs",
   "contributes": {
@@ -69,7 +88,7 @@
   },
   "dependencies": {
     "ignore": "^7.0.5",
-    "mq-web": "^0.6.3",
+    "mq-web": "^0.6.5",
     "mqpad-app": "workspace:*",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"

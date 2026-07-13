@@ -94,6 +94,74 @@
   background-color: var(--mqpad-border, #3e3e42);
 }
 
+.file-tree-facets {
+  margin: 0 8px 8px;
+  flex-shrink: 0;
+}
+
+.file-tree-facets-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 4px 2px;
+  cursor: pointer;
+  color: var(--mqpad-tree-title, #a39a8c);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.file-tree-facets-header:hover {
+  color: var(--mqpad-accent);
+}
+
+.file-tree-facets-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px 2px 4px;
+}
+
+.file-tree-facet-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.file-tree-facet-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--mqpad-surface-sunken);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  color: var(--mqpad-text-muted, #94a3b8);
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.file-tree-facet-chip:hover {
+  color: var(--mqpad-text);
+  border-color: var(--mqpad-border);
+}
+
+.file-tree-facet-chip.active {
+  background-color: var(--mqpad-accent-soft);
+  border-color: var(--mqpad-accent);
+  color: var(--mqpad-accent);
+}
+
+.file-tree-facet-count {
+  font-size: 10px;
+  opacity: 0.75;
+}
+
 .file-tree-content {
   flex: 1;
   overflow-y: auto;

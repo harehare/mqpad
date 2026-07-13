@@ -18,6 +18,7 @@ import { useTheme } from "./theme/useTheme";
 import { usePreferences } from "./theme/usePreferences";
 import { usePinnedNotes } from "./usePinnedNotes";
 import { useFirstRun } from "./useFirstRun";
+import { useTagIndex } from "./useTagIndex";
 import "./theme.css";
 import "./App.css";
 
@@ -73,6 +74,7 @@ export function App({
   const [theme, setTheme] = useTheme();
   const [preferences, setPreferences] = usePreferences();
   const [pinnedPaths, togglePin] = usePinnedNotes();
+  const { metaByPath, refreshPath: refreshTagIndexPath } = useTagIndex(fs, files);
   const [fsReady, setFsReady] = useState(false);
   const [stats, setStats] = useState<EditorStats | null>(null);
   const [sourceMode, setSourceMode] = useState(false);
@@ -200,10 +202,11 @@ export function App({
           setOpenFiles((prev) =>
             prev[path] ? { ...prev, [path]: { ...prev[path], savedContent: content } } : prev,
           );
+          refreshTagIndexPath(path, content);
         });
       }, AUTOSAVE_DEBOUNCE_MS);
     },
-    [fs],
+    [fs, refreshTagIndexPath],
   );
 
   const handleEditorChange = useCallback(
@@ -434,6 +437,7 @@ export function App({
               selectedFile={activePath}
               pinnedPaths={pinnedPaths}
               onTogglePin={togglePin}
+              metaByPath={metaByPath}
             />
           </div>
           <div className="mqpad-main">
