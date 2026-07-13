@@ -6,3 +6,5 @@ allowBuilds:
   keytar: true
   sharp: true
   workerd: true
+minimumReleaseAgeExclude:
+  - mq-web@0.6.5
