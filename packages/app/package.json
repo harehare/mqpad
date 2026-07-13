@@ -1,7 +1,7 @@
 {
   "name": "mqpad-app",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Shared mqpad WYSIWYG editor UI (file explorer + Tiptap editor) used by both the web app and the VS Code extension webview",
   "license": "MIT",
   "type": "module",

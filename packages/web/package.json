@@ -1,7 +1,7 @@
 {
   "name": "mqpad-web",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Standalone browser app for mqpad, backed by OPFS",
   "license": "MIT",
   "type": "module",
