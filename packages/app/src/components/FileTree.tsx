@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import type { FileNode } from "../fs/types";
+import type { NoteMeta } from "../tagIndex";
 import { FileIcon } from "./FileIcon";
 import {
   VscChevronRight,
@@ -15,6 +16,7 @@ import {
   VscClose,
   VscPin,
   VscPinned,
+  VscTag,
 } from "react-icons/vsc";
 import "./FileTree.css";
 import { ContextMenu, ContextMenuItem } from "./ContextMenu";
@@ -32,6 +34,8 @@ type FileTreeProps = {
   selectedFile: string | null;
   pinnedPaths: string[];
   onTogglePin: (path: string) => void;
+  /** Frontmatter `tags`/`category` per file path, used to power tag/category browsing and search tokens. */
+  metaByPath: Record<string, NoteMeta>;
 };
 
 type FileTreeNodeProps = {
@@ -363,19 +367,101 @@ const FileTreeNode = ({
   );
 };
 
-const filterNodes = (nodes: FileNode[], query: string): FileNode[] => {
-  if (!query) return nodes;
-  const q = query.toLowerCase();
+type ParsedSearch = { text: string; tags: string[]; category: string | null };
+
+/** `#tag` and `@category` tokens filter by frontmatter metadata; anything else matches the file name. */
+const parseSearchQuery = (query: string): ParsedSearch => {
+  const tags: string[] = [];
+  let category: string | null = null;
+  const textParts: string[] = [];
+  for (const token of query.trim().split(/\s+/).filter(Boolean)) {
+    if (token.startsWith("#") && token.length > 1) {
+      tags.push(token.slice(1).toLowerCase());
+    } else if (token.startsWith("@") && token.length > 1) {
+      category = token.slice(1).toLowerCase();
+    } else {
+      textParts.push(token);
+    }
+  }
+  return { text: textParts.join(" ").toLowerCase(), tags, category };
+};
+
+const nodeMatchesFacets = (node: FileNode, parsed: ParsedSearch, metaByPath: Record<string, NoteMeta>): boolean => {
+  const meta = metaByPath[node.path];
+  if (parsed.tags.length > 0) {
+    const fileTags = (meta?.tags ?? []).map((tag) => tag.toLowerCase());
+    if (!parsed.tags.every((tag) => fileTags.includes(tag))) return false;
+  }
+  if (parsed.category && meta?.category?.toLowerCase() !== parsed.category) return false;
+  return true;
+};
+
+const filterNodes = (nodes: FileNode[], parsed: ParsedSearch, metaByPath: Record<string, NoteMeta>): FileNode[] => {
+  const hasFacetFilter = parsed.tags.length > 0 || parsed.category !== null;
+  if (!parsed.text && !hasFacetFilter) return nodes;
   return nodes.flatMap((node) => {
     if (node.type === "file") {
-      return node.name.toLowerCase().includes(q) ? [node] : [];
+      const nameMatches = !parsed.text || node.name.toLowerCase().includes(parsed.text);
+      return nameMatches && nodeMatchesFacets(node, parsed, metaByPath) ? [node] : [];
     }
-    const filteredChildren = filterNodes(node.children ?? [], query);
+    const filteredChildren = filterNodes(node.children ?? [], parsed, metaByPath);
     if (filteredChildren.length > 0) {
       return [{ ...node, children: filteredChildren }];
     }
-    return node.name.toLowerCase().includes(q) ? [node] : [];
+    // A directory name match only counts for plain-text search - tags/categories live on files.
+    return !hasFacetFilter && parsed.text && node.name.toLowerCase().includes(parsed.text) ? [node] : [];
   });
+};
+
+type FacetEntry = { key: string; label: string; count: number };
+
+/** Aggregates tags/categories (case-insensitively) across every file currently in the tree. */
+const collectFacets = (nodes: FileNode[], metaByPath: Record<string, NoteMeta>) => {
+  const tagCounts = new Map<string, FacetEntry>();
+  const categoryCounts = new Map<string, FacetEntry>();
+
+  const bump = (map: Map<string, FacetEntry>, raw: string) => {
+    const key = raw.toLowerCase();
+    const existing = map.get(key);
+    if (existing) existing.count += 1;
+    else map.set(key, { key, label: raw, count: 1 });
+  };
+
+  const walk = (list: FileNode[]) => {
+    for (const node of list) {
+      if (node.type === "file") {
+        const meta = metaByPath[node.path];
+        for (const tag of meta?.tags ?? []) bump(tagCounts, tag);
+        if (meta?.category) bump(categoryCounts, meta.category);
+      } else {
+        walk(node.children ?? []);
+      }
+    }
+  };
+  walk(nodes);
+
+  const byCountThenLabel = (a: FacetEntry, b: FacetEntry) => b.count - a.count || a.label.localeCompare(b.label);
+  return {
+    tags: [...tagCounts.values()].sort(byCountThenLabel),
+    categories: [...categoryCounts.values()].sort(byCountThenLabel),
+  };
+};
+
+const toggleTagToken = (query: string, tagKey: string): string => {
+  const tokens = query.split(/\s+/).filter(Boolean);
+  const idx = tokens.findIndex((t) => t.startsWith("#") && t.slice(1).toLowerCase() === tagKey);
+  if (idx >= 0) tokens.splice(idx, 1);
+  else tokens.push(`#${tagKey}`);
+  return tokens.join(" ");
+};
+
+const toggleCategoryToken = (query: string, categoryKey: string): string => {
+  const tokens = query.split(/\s+/).filter(Boolean);
+  const idx = tokens.findIndex((t) => t.startsWith("@"));
+  const wasActive = idx >= 0 && tokens[idx]!.slice(1).toLowerCase() === categoryKey;
+  if (idx >= 0) tokens.splice(idx, 1);
+  if (!wasActive) tokens.push(`@${categoryKey}`);
+  return tokens.join(" ");
 };
 
 /** Recursively moves pinned files to the front of each folder's listing, keeping the rest in their existing (directory-first, alphabetical) order. */
@@ -403,6 +489,7 @@ export const FileTree = ({
   selectedFile,
   pinnedPaths,
   onTogglePin,
+  metaByPath,
 }: FileTreeProps) => {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; node: FileNode }>();
   const [renamingNode, setRenamingNode] = useState<FileNode>();
@@ -415,12 +502,24 @@ export const FileTree = ({
     dragOverRoot: false,
   });
   const [searchQuery, setSearchQuery] = useState("");
+  const [facetsCollapsed, setFacetsCollapsed] = useState(false);
 
   const pinnedSet = useMemo(() => new Set(pinnedPaths), [pinnedPaths]);
+  const parsedQuery = useMemo(() => parseSearchQuery(searchQuery), [searchQuery]);
   const displayedFiles = useMemo(
-    () => applyPinnedOrder(filterNodes(files, searchQuery), pinnedSet),
-    [files, searchQuery, pinnedSet],
+    () => applyPinnedOrder(filterNodes(files, parsedQuery, metaByPath), pinnedSet),
+    [files, parsedQuery, metaByPath, pinnedSet],
   );
+  const facets = useMemo(() => collectFacets(files, metaByPath), [files, metaByPath]);
+  const activeTagKeys = useMemo(() => new Set(parsedQuery.tags), [parsedQuery.tags]);
+
+  const handleToggleTag = useCallback((tagKey: string) => {
+    setSearchQuery((prev) => toggleTagToken(prev, tagKey));
+  }, []);
+
+  const handleToggleCategory = useCallback((categoryKey: string) => {
+    setSearchQuery((prev) => toggleCategoryToken(prev, categoryKey));
+  }, []);
 
   const handleContextMenu = useCallback((e: React.MouseEvent, node: FileNode) => {
     e.preventDefault();
@@ -607,6 +706,57 @@ export const FileTree = ({
           </button>
         )}
       </div>
+
+      {(facets.tags.length > 0 || facets.categories.length > 0) && (
+        <div className="file-tree-facets">
+          <button
+            type="button"
+            className="file-tree-facets-header"
+            onClick={() => setFacetsCollapsed((value) => !value)}
+            aria-expanded={!facetsCollapsed}
+          >
+            {facetsCollapsed ? <VscChevronRight size={14} /> : <VscChevronDown size={14} />}
+            <VscTag size={13} />
+            <span>Tags & Categories</span>
+          </button>
+          {!facetsCollapsed && (
+            <div className="file-tree-facets-body">
+              {facets.tags.length > 0 && (
+                <div className="file-tree-facet-group">
+                  {facets.tags.map((tag) => (
+                    <button
+                      key={tag.key}
+                      type="button"
+                      className={`file-tree-facet-chip ${activeTagKeys.has(tag.key) ? "active" : ""}`}
+                      onClick={() => handleToggleTag(tag.key)}
+                      title={`Filter by #${tag.label}`}
+                    >
+                      #{tag.label}
+                      <span className="file-tree-facet-count">{tag.count}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {facets.categories.length > 0 && (
+                <div className="file-tree-facet-group">
+                  {facets.categories.map((category) => (
+                    <button
+                      key={category.key}
+                      type="button"
+                      className={`file-tree-facet-chip category ${parsedQuery.category === category.key ? "active" : ""}`}
+                      onClick={() => handleToggleCategory(category.key)}
+                      title={`Filter by category: ${category.label}`}
+                    >
+                      {category.label}
+                      <span className="file-tree-facet-count">{category.count}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className={contentClassName} onDragOver={handleRootDragOver} onDrop={handleRootDrop} onDragLeave={handleRootDragLeave}>
         {creatingItem?.parentPath === undefined && creatingItem?.type && (

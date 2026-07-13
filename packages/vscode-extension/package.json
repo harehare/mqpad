@@ -15,7 +15,26 @@
   "engines": {
     "vscode": "^1.90.0"
   },
-  "categories": ["Other"],
+  "categories": ["Other", "Notebooks", "Visualization"],
+  "keywords": [
+    "markdown",
+    "wysiwyg",
+    "editor",
+    "notes",
+    "note-taking",
+    "obsidian",
+    "wiki-links",
+    "knowledge-base",
+    "pkm",
+    "mq",
+    "query",
+    "mermaid",
+    "katex",
+    "math",
+    "frontmatter",
+    "vault",
+    "gfm"
+  ],
   "activationEvents": [],
   "main": "./dist/extension.cjs",
   "contributes": {
