@@ -8,8 +8,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 42px;
-  padding: 0 14px;
+  min-height: 42px;
+  /* Installed as a standalone PWA, this is the top-most bar - pad it under
+     the notch/status bar (env() resolves to 0 on devices without one, so
+     this is a no-op everywhere else). */
+  padding: env(safe-area-inset-top, 0px) max(14px, env(safe-area-inset-right, 0px)) 0 max(14px, env(safe-area-inset-left, 0px));
   background: color-mix(in srgb, var(--mqpad-surface-raised) 72%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -101,6 +104,13 @@
 }
 
 .mqpad-sidebar-hidden {
+  display: none;
+}
+
+/* Only shown below the mobile breakpoint, where the sidebar becomes an
+   overlay drawer instead of sharing width with the content - tapping
+   outside it closes it, like a typical mobile drawer. */
+.mqpad-sidebar-backdrop {
   display: none;
 }
 
@@ -232,4 +242,56 @@
   padding: 0.15em 0.4em;
   font-family: var(--mqpad-mono-font);
   font-size: 0.9em;
+}
+
+/* Phone/small-tablet layout. The sidebar switches from a docked column to a
+   full-height overlay drawer (with a tap-to-close backdrop) so it doesn't
+   permanently eat a third of a phone-width viewport; the editor's generous
+   desktop margins shrink to leave room for actual text. */
+@media (max-width: 768px) {
+  .mqpad-titlebar {
+    height: 46px;
+    padding: 0 10px;
+  }
+
+  .mqpad-titlebar-title {
+    display: none;
+  }
+
+  .mqpad-titlebar-actions {
+    gap: 4px;
+  }
+
+  .mqpad-titlebar-settings {
+    padding: 8px;
+  }
+
+  .mqpad-body {
+    position: relative;
+  }
+
+  .mqpad-sidebar {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 45;
+    width: min(85vw, 320px);
+    box-shadow: var(--mqpad-shadow);
+  }
+
+  .mqpad-sidebar-backdrop {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 44;
+    background: rgba(0, 0, 0, 0.45);
+  }
+
+  .mqpad-editor-area .tiptap,
+  .mqpad-source-view {
+    padding: 24px 18px;
+  }
+
+  .mqpad-empty-state {
+    padding: 24px;
+  }
 }

@@ -12,6 +12,9 @@
     <a href="https://marketplace.visualstudio.com/items?itemName=harehare.mqpad-vscode-extension">
       <img src="https://img.shields.io/badge/VS%20Code-Marketplace-007ACC?style=flat-square&logo=visualstudiocode&logoColor=white" alt="VS Code Marketplace" />
     </a>
+    <a href="https://open-vsx.org/extension/harehare/mqpad-vscode-extension">
+      <img src="https://img.shields.io/open-vsx/v/harehare/mqpad-vscode-extension?style=flat-square&logo=eclipseide" alt="Open VSX Version" />
+    </a>
     <a href="LICENSE">
       <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="License: MIT" />
     </a>

@@ -88,3 +88,12 @@
 .tab-close-button:hover {
   background-color: var(--mqpad-border);
 }
+
+/* No hover on touch, so the close button on the active tab (the only one
+   normally reachable without a hover) needs a real hit target - a 2px
+   padding around a 12px icon is well under a comfortable tap size. */
+@media (hover: none) {
+  .tab-item.active .tab-close-button {
+    padding: 6px;
+  }
+}

@@ -5,8 +5,8 @@
 
 .mqpad-preview-exit {
   position: fixed;
-  top: 6px;
-  right: 14px;
+  top: max(6px, env(safe-area-inset-top, 0px));
+  right: max(14px, env(safe-area-inset-right, 0px));
   z-index: 10003;
   background: var(--mqpad-accent, #67b8e3);
   color: var(--mqpad-accent-contrast, #1e293b);

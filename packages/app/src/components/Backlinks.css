@@ -1,0 +1,66 @@
+.mqpad-backlinks {
+  border-top: 1px solid var(--mqpad-border);
+  background: var(--mqpad-surface);
+  flex-shrink: 0;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+.mqpad-backlinks-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--mqpad-text-muted);
+  cursor: pointer;
+  position: sticky;
+  top: 0;
+}
+
+.mqpad-backlinks-header:hover {
+  color: var(--mqpad-text);
+}
+
+.mqpad-backlinks-body {
+  display: flex;
+  flex-direction: column;
+  padding: 0 6px 6px;
+}
+
+.mqpad-backlinks-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  background: none;
+  border: none;
+  border-radius: var(--mqpad-radius-sm);
+  color: var(--mqpad-text);
+  text-align: left;
+  padding: 7px 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.mqpad-backlinks-item:hover {
+  background: var(--mqpad-accent-soft);
+}
+
+.mqpad-backlinks-item-title {
+  flex-shrink: 0;
+  color: var(--mqpad-accent);
+}
+
+.mqpad-backlinks-item-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mqpad-text-muted);
+  font-size: 11px;
+}

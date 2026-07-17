@@ -36,12 +36,14 @@ type FileTreeProps = {
   onTogglePin: (path: string) => void;
   /** Frontmatter `tags`/`category` per file path, used to power tag/category browsing and search tokens. */
   metaByPath: Record<string, NoteMeta>;
+  /** Raw body content per file path, used so plain-text search also matches note content, not just file names. */
+  contentByPath: Record<string, string>;
 };
 
 type FileTreeNodeProps = {
   node: FileNode;
   onFileSelect: (path: string) => void;
-  onContextMenu: (e: React.MouseEvent, node: FileNode) => void;
+  onContextMenu: (pos: { x: number; y: number }, node: FileNode) => void;
   onStartRename: (node: FileNode) => void;
   renamingPath: string | null;
   renamingValue: string;
@@ -181,9 +183,64 @@ const FileTreeNode = ({
   const handleContextMenu = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
-      onContextMenu(e, node);
+      onContextMenu({ x: e.clientX, y: e.clientY }, node);
     },
     [node, onContextMenu],
+  );
+
+  // Touch has no right-click, so a long-press on the row opens the same
+  // context menu. Cancelled if the finger moves (a scroll, not a press) or
+  // lifts before the threshold (a tap, handled by onClick instead); the
+  // ghost click that follows a real long-press is suppressed in
+  // handleTouchEnd so it doesn't also open/select the file underneath.
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const touchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const longPressFiredRef = useRef(false);
+
+  const clearTouchTimer = useCallback(() => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = undefined;
+    }
+  }, []);
+
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (isRenaming) return;
+      const touch = e.touches[0];
+      if (!touch) return;
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+      longPressFiredRef.current = false;
+      clearTouchTimer();
+      touchTimerRef.current = setTimeout(() => {
+        longPressFiredRef.current = true;
+        onContextMenu({ x: touch.clientX, y: touch.clientY }, node);
+      }, 500);
+    },
+    [isRenaming, node, onContextMenu, clearTouchTimer],
+  );
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      const start = touchStartRef.current;
+      const touch = e.touches[0];
+      if (!start || !touch) return;
+      if (Math.abs(touch.clientX - start.x) > 10 || Math.abs(touch.clientY - start.y) > 10) {
+        clearTouchTimer();
+      }
+    },
+    [clearTouchTimer],
+  );
+
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      clearTouchTimer();
+      if (longPressFiredRef.current) {
+        e.preventDefault();
+        longPressFiredRef.current = false;
+      }
+    },
+    [clearTouchTimer],
   );
 
   const handleKeyDown = useCallback(
@@ -279,6 +336,10 @@ const FileTreeNode = ({
         onDragOver={handleDragOver}
         onDrop={handleDrop}
         onDragLeave={handleDragLeave}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
         draggable={!isRenaming}
         tabIndex={0}
         style={{ paddingLeft: `${level * 12 + 4}px` }}
@@ -396,15 +457,25 @@ const nodeMatchesFacets = (node: FileNode, parsed: ParsedSearch, metaByPath: Rec
   return true;
 };
 
-const filterNodes = (nodes: FileNode[], parsed: ParsedSearch, metaByPath: Record<string, NoteMeta>): FileNode[] => {
+const filterNodes = (
+  nodes: FileNode[],
+  parsed: ParsedSearch,
+  metaByPath: Record<string, NoteMeta>,
+  contentByPath: Record<string, string>,
+): FileNode[] => {
   const hasFacetFilter = parsed.tags.length > 0 || parsed.category !== null;
   if (!parsed.text && !hasFacetFilter) return nodes;
   return nodes.flatMap((node) => {
     if (node.type === "file") {
-      const nameMatches = !parsed.text || node.name.toLowerCase().includes(parsed.text);
-      return nameMatches && nodeMatchesFacets(node, parsed, metaByPath) ? [node] : [];
+      // Plain-text search matches the file name or its body content, so notes
+      // are findable by what they say, not just what they're called.
+      const textMatches =
+        !parsed.text ||
+        node.name.toLowerCase().includes(parsed.text) ||
+        (contentByPath[node.path]?.toLowerCase().includes(parsed.text) ?? false);
+      return textMatches && nodeMatchesFacets(node, parsed, metaByPath) ? [node] : [];
     }
-    const filteredChildren = filterNodes(node.children ?? [], parsed, metaByPath);
+    const filteredChildren = filterNodes(node.children ?? [], parsed, metaByPath, contentByPath);
     if (filteredChildren.length > 0) {
       return [{ ...node, children: filteredChildren }];
     }
@@ -490,6 +561,7 @@ export const FileTree = ({
   pinnedPaths,
   onTogglePin,
   metaByPath,
+  contentByPath,
 }: FileTreeProps) => {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; node: FileNode }>();
   const [renamingNode, setRenamingNode] = useState<FileNode>();
@@ -507,8 +579,8 @@ export const FileTree = ({
   const pinnedSet = useMemo(() => new Set(pinnedPaths), [pinnedPaths]);
   const parsedQuery = useMemo(() => parseSearchQuery(searchQuery), [searchQuery]);
   const displayedFiles = useMemo(
-    () => applyPinnedOrder(filterNodes(files, parsedQuery, metaByPath), pinnedSet),
-    [files, parsedQuery, metaByPath, pinnedSet],
+    () => applyPinnedOrder(filterNodes(files, parsedQuery, metaByPath, contentByPath), pinnedSet),
+    [files, parsedQuery, metaByPath, contentByPath, pinnedSet],
   );
   const facets = useMemo(() => collectFacets(files, metaByPath), [files, metaByPath]);
   const activeTagKeys = useMemo(() => new Set(parsedQuery.tags), [parsedQuery.tags]);
@@ -521,9 +593,8 @@ export const FileTree = ({
     setSearchQuery((prev) => toggleCategoryToken(prev, categoryKey));
   }, []);
 
-  const handleContextMenu = useCallback((e: React.MouseEvent, node: FileNode) => {
-    e.preventDefault();
-    setContextMenu({ x: e.clientX, y: e.clientY, node });
+  const handleContextMenu = useCallback((pos: { x: number; y: number }, node: FileNode) => {
+    setContextMenu({ x: pos.x, y: pos.y, node });
   }, []);
 
   const handleStartRename = useCallback((node: FileNode) => {
@@ -696,7 +767,7 @@ export const FileTree = ({
         <input
           type="text"
           className="file-tree-search-input"
-          placeholder="Search files..."
+          placeholder="Search files & notes..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
