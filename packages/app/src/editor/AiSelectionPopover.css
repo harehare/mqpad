@@ -1,0 +1,70 @@
+.mqpad-ai-selection-popover {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--mqpad-surface-sunken);
+  border-top: 1px solid var(--mqpad-border);
+}
+
+.mqpad-ai-selection-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mqpad-ai-selection-presets button {
+  border: 1px solid var(--mqpad-border);
+  border-radius: 999px;
+  background: var(--mqpad-surface);
+  color: var(--mqpad-text);
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.mqpad-ai-selection-presets button:hover:not(:disabled) {
+  background: var(--mqpad-accent-soft);
+}
+
+.mqpad-ai-selection-presets button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mqpad-ai-selection-input-row {
+  display: flex;
+  gap: 6px;
+}
+
+.mqpad-ai-selection-input-row input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--mqpad-border);
+  border-radius: 6px;
+  background: var(--mqpad-surface);
+  color: var(--mqpad-text);
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.mqpad-ai-selection-input-row button {
+  border: none;
+  background: var(--mqpad-accent);
+  color: var(--mqpad-accent-contrast, #fff);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mqpad-ai-selection-input-row button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mqpad-ai-selection-error {
+  color: var(--mqpad-error, #e08a73);
+  font-size: 12px;
+}

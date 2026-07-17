@@ -31,6 +31,8 @@ export const MqCodeBlock = Node.create<MqCodeBlockOptions>({
     return {
       query: { default: "" },
       result: { default: "" },
+      /** "document" (default) evaluates against the open note; "vault" runs the query against every note. */
+      scope: { default: "document" },
     };
   },
 
@@ -49,9 +51,10 @@ export const MqCodeBlock = Node.create<MqCodeBlockOptions>({
   addInputRules() {
     return [
       new InputRule({
-        find: /^```mq[ \n]$/,
-        handler: ({ state, range }) => {
-          const node = this.type.create({ query: "", result: "" });
+        find: /^```mq(-vault)?[ \n]$/,
+        handler: ({ state, range, match }) => {
+          const scope = match[1] ? "vault" : "document";
+          const node = this.type.create({ query: "", result: "", scope });
           state.tr.replaceRangeWith(range.from, range.to, node);
         },
       }),

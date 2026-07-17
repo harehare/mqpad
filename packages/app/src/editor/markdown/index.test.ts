@@ -110,6 +110,21 @@ describe("markdown round-trip", () => {
     expect(roundTrip(md)).toBe(md);
   });
 
+  it("round-trips an mq-vault fence, preserving vault scope", () => {
+    const md = "```mq-vault\n.h1\n```\n\n```mq-result\n# Output\n```";
+    const doc = parser.parse(md);
+
+    let found: { query: string; result: string; scope: string } | null = null;
+    doc.descendants((node) => {
+      if (node.type.name === "mqCodeBlock") {
+        found = { query: node.attrs.query, result: node.attrs.result, scope: node.attrs.scope };
+      }
+    });
+
+    expect(found).toEqual({ query: ".h1", result: "# Output", scope: "vault" });
+    expect(roundTrip(md)).toBe(md);
+  });
+
   it("copy mode replaces an mq block with its evaluated result instead of the live fences", () => {
     const md = "Before.\n\n```mq\n.h1\n```\n\n```mq-result\n# Output\n```\n\nAfter.";
     const doc = parser.parse(md);

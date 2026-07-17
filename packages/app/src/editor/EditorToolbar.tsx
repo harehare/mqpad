@@ -1,4 +1,5 @@
 import { type Editor as TiptapEditor, useEditorState } from "@tiptap/react";
+import { Slice } from "@tiptap/pm/model";
 import type { MarkdownSerializer } from "prosemirror-markdown";
 import { useState } from "react";
 import {
@@ -18,6 +19,7 @@ import {
   LuRedo2,
   LuRows3,
   LuSeparatorHorizontal,
+  LuSparkles,
   LuStrikethrough,
   LuTable,
   LuTableColumnsSplit,
@@ -29,7 +31,11 @@ import {
   LuUnderline,
   LuUndo2,
 } from "react-icons/lu";
-import { buildMarkdownSerializer, serializeToMarkdown } from "./markdown";
+import { useAi } from "../ai/AiContext";
+import { aiAvailabilityTooltip } from "../ai/availabilityMessage";
+import { buildEditPrompt } from "../ai/editPrompt";
+import { buildMarkdownParser, buildMarkdownSerializer, serializeToMarkdown } from "./markdown";
+import { AiSelectionPopover } from "./AiSelectionPopover";
 import { QueryConsole } from "./QueryConsole";
 
 export type EditorToolbarProps = {
@@ -37,10 +43,16 @@ export type EditorToolbarProps = {
   serializer: MarkdownSerializer;
 };
 
+type SelectionRange = { from: number; to: number };
+
 export function EditorToolbar({ editor, serializer }: EditorToolbarProps) {
+  const ai = useAi();
   const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
   const [linkValue, setLinkValue] = useState("");
   const [consoleOpen, setConsoleOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiRange, setAiRange] = useState<SelectionRange | null>(null);
+  const [aiOriginalText, setAiOriginalText] = useState("");
   const [copied, setCopied] = useState(false);
 
   const state = useEditorState({
@@ -62,6 +74,7 @@ export function EditorToolbar({ editor, serializer }: EditorToolbarProps) {
       codeBlock: ed.isActive("codeBlock"),
       link: ed.isActive("link"),
       inTable: ed.isActive("table"),
+      hasSelection: !ed.state.selection.empty,
     }),
   });
 
@@ -69,6 +82,46 @@ export function EditorToolbar({ editor, serializer }: EditorToolbarProps) {
     setLinkValue((editor.getAttributes("link").href as string | undefined) ?? "");
     setLinkPopoverOpen(true);
     setConsoleOpen(false);
+    setAiOpen(false);
+  };
+
+  // Captures the selected range's markdown up front, so the AI edit is
+  // grounded in exactly what was selected even if focus later moves into the
+  // popover's own input.
+  const openAiPopover = () => {
+    const { from, to } = editor.state.selection;
+    if (from === to) return;
+    setAiRange({ from, to });
+    setAiOriginalText(serializeToMarkdown(serializer, editor.state.doc.cut(from, to)));
+    setAiOpen(true);
+    setLinkPopoverOpen(false);
+    setConsoleOpen(false);
+  };
+
+  const handleAiGenerate = (instruction: string, onDownloadProgress?: (fraction: number) => void) =>
+    ai.complete(buildEditPrompt(instruction, aiOriginalText), onDownloadProgress);
+
+  // Parses the AI's suggested Markdown the same way a Markdown paste is
+  // parsed (see clipboardTextParser.ts) and replaces the originally selected
+  // range with it - the range is re-clamped to the current doc size in case
+  // it changed size elsewhere (e.g. a live mq block) while the popover was
+  // open. When the suggestion is a single textblock (the common case: a
+  // rewritten/translated/fixed run of inline text), its inline content is
+  // spliced in directly instead of the wrapping paragraph node, so it merges
+  // seamlessly with whatever text surrounds the selection rather than
+  // splitting the paragraph around a new block. A multi-block suggestion
+  // (e.g. turning the selection into a list) still inserts as real blocks.
+  const handleAiAccept = (suggested: string) => {
+    if (!aiRange) return;
+    const parsedDoc = buildMarkdownParser(editor.schema).parse(suggested);
+    const singleTextblock = parsedDoc.childCount === 1 && parsedDoc.firstChild?.isTextblock;
+    const slice = new Slice(singleTextblock ? parsedDoc.firstChild!.content : parsedDoc.content, 0, 0);
+    const docSize = editor.state.doc.content.size;
+    const to = Math.min(aiRange.to, docSize);
+    const from = Math.min(aiRange.from, to);
+    editor.view.dispatch(editor.state.tr.replaceRange(from, to, slice).scrollIntoView());
+    setAiOpen(false);
+    setAiRange(null);
   };
 
   const applyLink = () => {
@@ -263,10 +316,26 @@ export function EditorToolbar({ editor, serializer }: EditorToolbarProps) {
           onClick={() => {
             setConsoleOpen((open) => !open);
             setLinkPopoverOpen(false);
+            setAiOpen(false);
           }}
           title="Run an mq query against the whole document"
         >
           <LuTerminal size={16} />
+        </button>
+        <button
+          type="button"
+          className={`mqpad-toolbar-btn ${aiOpen ? "active" : ""}`}
+          disabled={!state.hasSelection || !ai.configured}
+          onClick={() => (aiOpen ? setAiOpen(false) : openAiPopover())}
+          title={
+            ai.availability === "unavailable"
+              ? aiAvailabilityTooltip(ai.availability, "Ask AI")
+              : !state.hasSelection
+                ? "Select text to ask AI about it"
+                : aiAvailabilityTooltip(ai.availability, "Ask AI about the selected text")
+          }
+        >
+          <LuSparkles size={16} />
         </button>
       </div>
 
@@ -351,6 +420,14 @@ export function EditorToolbar({ editor, serializer }: EditorToolbarProps) {
 
       {consoleOpen && (
         <QueryConsole editor={editor} serializer={serializer} onClose={() => setConsoleOpen(false)} />
+      )}
+      {aiOpen && aiRange && (
+        <AiSelectionPopover
+          originalText={aiOriginalText}
+          onGenerate={handleAiGenerate}
+          onAccept={handleAiAccept}
+          onClose={() => setAiOpen(false)}
+        />
       )}
     </div>
   );
