@@ -11,6 +11,8 @@ import { TabBar, type Tab } from "./components/TabBar";
 import { SettingsDialog } from "./components/SettingsDialog";
 import { StatusBar } from "./components/StatusBar";
 import { CommandPalette, type Command } from "./components/CommandPalette";
+import { QuickOpen } from "./components/QuickOpen";
+import { Backlinks } from "./components/Backlinks";
 import { WelcomeDialog } from "./components/WelcomeDialog";
 import { FileChangedBanner } from "./components/FileChangedBanner";
 import { THEME_LABELS, type ThemeName } from "./theme/themes";
@@ -18,12 +20,20 @@ import { useTheme } from "./theme/useTheme";
 import { usePreferences } from "./theme/usePreferences";
 import { usePinnedNotes } from "./usePinnedNotes";
 import { useFirstRun } from "./useFirstRun";
-import { useTagIndex } from "./useTagIndex";
+import { flattenMarkdownPaths, useNoteIndex } from "./useNoteIndex";
+import { exportVaultZip, importVaultZip } from "./vault/vaultArchive";
 import "./theme.css";
 import "./App.css";
 
 function isShortcut(e: KeyboardEvent, key: string, shift = false): boolean {
   return (e.metaKey || e.ctrlKey) && e.shiftKey === shift && e.key.toLowerCase() === key;
+}
+
+// Below this, the sidebar overlays the content instead of sharing width with
+// it (see the matching breakpoint in App.css) - so it starts closed and
+// closes itself after picking a file, like a typical mobile drawer.
+function isMobileViewport(): boolean {
+  return window.matchMedia("(max-width: 768px)").matches;
 }
 
 export type AppProps = {
@@ -74,13 +84,14 @@ export function App({
   const [theme, setTheme] = useTheme();
   const [preferences, setPreferences] = usePreferences();
   const [pinnedPaths, togglePin] = usePinnedNotes();
-  const { metaByPath, refreshPath: refreshTagIndexPath } = useTagIndex(fs, files);
+  const { metaByPath, contentByPath, backlinksByPath, refreshPath: refreshNoteIndexPath } = useNoteIndex(fs, files);
   const [fsReady, setFsReady] = useState(false);
   const [stats, setStats] = useState<EditorStats | null>(null);
   const [sourceMode, setSourceMode] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
-  const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [sidebarVisible, setSidebarVisible] = useState(() => !isMobileViewport());
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [quickOpenOpen, setQuickOpenOpen] = useState(false);
   const [welcomeSeen, markWelcomeSeen] = useFirstRun();
   const [welcomeOpen, setWelcomeOpen] = useState(!welcomeSeen);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -202,11 +213,11 @@ export function App({
           setOpenFiles((prev) =>
             prev[path] ? { ...prev, [path]: { ...prev[path], savedContent: content } } : prev,
           );
-          refreshTagIndexPath(path, content);
+          refreshNoteIndexPath(path, content);
         });
       }, AUTOSAVE_DEBOUNCE_MS);
     },
-    [fs, refreshTagIndexPath],
+    [fs, refreshNoteIndexPath],
   );
 
   const handleEditorChange = useCallback(
@@ -252,6 +263,32 @@ export function App({
     },
     [fs, refreshFiles],
   );
+
+  const handleExportVault = useCallback(async () => {
+    const zipData = await exportVaultZip(fs);
+    const blob = new Blob([new Uint8Array(zipData)], { type: "application/zip" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${vaultRootLabel || "mqpad"}-${new Date().toISOString().slice(0, 10)}.zip`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [fs, vaultRootLabel]);
+
+  const handleImportVault = useCallback(() => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".zip";
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      file
+        .arrayBuffer()
+        .then((buffer) => importVaultZip(fs, new Uint8Array(buffer)))
+        .then(refreshFiles);
+    };
+    input.click();
+  }, [fs, refreshFiles]);
 
   const handleDeleteFile = useCallback(
     async (path: string) => {
@@ -318,6 +355,7 @@ export function App({
   const activeContent = activePath ? openFiles[activePath]?.content ?? "" : "";
   const activeIsDirty = activePath ? openFiles[activePath]?.content !== openFiles[activePath]?.savedContent : false;
   const activeConflict = activePath ? conflicts[activePath] : undefined;
+  const activeBacklinks = activePath ? (backlinksByPath[activePath] ?? []).filter((path) => path !== activePath) : [];
 
   // The editor remounts (key={activePath}) on file switch, so drop the
   // previous file's stats rather than showing them briefly against the new one.
@@ -327,7 +365,7 @@ export function App({
 
   // Global shortcuts: Cmd/Ctrl+Shift+M toggles raw markdown source mode,
   // Cmd/Ctrl+Shift+Enter toggles distraction-free focus mode, Cmd/Ctrl+K
-  // opens the command palette.
+  // opens the command palette, Cmd/Ctrl+P opens the fuzzy file switcher.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isShortcut(e, "m", true)) {
@@ -342,15 +380,26 @@ export function App({
       } else if (isShortcut(e, "k")) {
         e.preventDefault();
         setPaletteOpen((v) => !v);
+      } else if (isShortcut(e, "p")) {
+        e.preventDefault();
+        setQuickOpenOpen((v) => !v);
       } else if (e.key === "Escape" && paletteOpen) {
         setPaletteOpen(false);
+      } else if (e.key === "Escape" && quickOpenOpen) {
+        setQuickOpenOpen(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [paletteOpen]);
+  }, [paletteOpen, quickOpenOpen]);
 
   const commands: Command[] = [
+    {
+      id: "quick-open",
+      label: "Quick Open...",
+      hint: "Cmd+P",
+      onRun: () => setQuickOpenOpen(true),
+    },
     {
       id: "new-file",
       label: "New File",
@@ -361,6 +410,14 @@ export function App({
       label: "New Folder",
       onRun: () => handleCreateFolder(activePath ? dirname(activePath) : undefined, "New Folder"),
     },
+    // Doesn't make sense against the single dropped/opened file preview mode
+    // is backed by - there's no multi-file vault to bundle up or unpack into.
+    ...(vaultRootEditable
+      ? [
+          { id: "export-vault", label: "Export Vault (.zip)", onRun: () => void handleExportVault() },
+          { id: "import-vault", label: "Import Vault (.zip)...", onRun: handleImportVault },
+        ]
+      : []),
     {
       id: "toggle-source-mode",
       label: sourceMode ? "Switch to WYSIWYG Mode" : "Switch to Markdown Source Mode",
@@ -424,10 +481,16 @@ export function App({
           </div>
         </div>
         <div className="mqpad-body">
+          {sidebarVisible && (
+            <div className="mqpad-sidebar-backdrop" onClick={() => setSidebarVisible(false)} />
+          )}
           <div className={`mqpad-sidebar ${sidebarVisible ? "" : "mqpad-sidebar-hidden"}`}>
             <FileTree
               files={files}
-              onFileSelect={openFile}
+              onFileSelect={(path) => {
+                openFile(path);
+                if (isMobileViewport()) setSidebarVisible(false);
+              }}
               onRefresh={refreshFiles}
               onCreateFile={handleCreateFile}
               onCreateFolder={handleCreateFolder}
@@ -438,6 +501,7 @@ export function App({
               pinnedPaths={pinnedPaths}
               onTogglePin={togglePin}
               metaByPath={metaByPath}
+              contentByPath={contentByPath}
             />
           </div>
           <div className="mqpad-main">
@@ -484,6 +548,7 @@ export function App({
                 </div>
               )}
             </div>
+            {activePath && activeBacklinks.length > 0 && <Backlinks paths={activeBacklinks} onNavigate={openFile} />}
           </div>
         </div>
         <StatusBar
@@ -508,6 +573,9 @@ export function App({
         />
       )}
       {paletteOpen && <CommandPalette commands={commands} onClose={() => setPaletteOpen(false)} />}
+      {quickOpenOpen && (
+        <QuickOpen paths={flattenMarkdownPaths(files)} onSelect={openFile} onClose={() => setQuickOpenOpen(false)} />
+      )}
       {welcomeOpen && (
         <WelcomeDialog
           onClose={() => {

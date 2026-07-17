@@ -614,3 +614,19 @@
 .mqpad-editor-area .tiptap.resize-cursor {
   cursor: col-resize;
 }
+
+@media (hover: none) {
+  .mqpad-toolbar-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .mqpad-toolbar-popover-input,
+  .mqpad-query-console-input,
+  .mqpad-mq-block-query,
+  .mqpad-mq-block-query-highlight pre.shiki,
+  .mqpad-mermaid-block-source,
+  .mqpad-math-block-source {
+    font-size: 16px;
+  }
+}

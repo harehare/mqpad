@@ -288,3 +288,28 @@
   font-size: 12px;
 }
 
+/* No hover on touch, so anything gated by :hover (pin buttons, action
+   buttons) needs to just stay visible, and hit targets need to be bigger
+   than the mouse-sized ones above. */
+@media (hover: none) {
+  .file-tree-pin-btn {
+    opacity: 1;
+  }
+
+  .file-tree-item {
+    padding: 9px 8px;
+  }
+
+  .file-tree-action-btn {
+    padding: 8px;
+  }
+
+  .file-tree-search-input {
+    font-size: 16px;
+  }
+
+  .file-tree-rename-input {
+    font-size: 16px;
+  }
+}
+

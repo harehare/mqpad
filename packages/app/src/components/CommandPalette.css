@@ -15,6 +15,7 @@
   border-radius: var(--mqpad-radius);
   box-shadow: var(--mqpad-shadow);
   width: 480px;
+  max-width: calc(100vw - 32px);
   max-height: 60vh;
   display: flex;
   flex-direction: column;
@@ -29,6 +30,20 @@
   padding: 14px 16px;
   font-size: 15px;
   outline: none;
+}
+
+@media (max-width: 768px) {
+  .mqpad-palette-overlay {
+    padding-top: 8vh;
+  }
+
+  .mqpad-palette-input {
+    font-size: 16px;
+  }
+
+  .mqpad-palette-item {
+    padding: 11px 10px;
+  }
 }
 
 .mqpad-palette-list {

@@ -2,8 +2,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 26px;
-  padding: 0 12px;
+  min-height: 26px;
+  /* Installed as a standalone PWA, this is the bottom-most bar - pad it
+     above the home-indicator swipe area (env() resolves to 0 on devices
+     without one, so this is a no-op everywhere else). */
+  padding: 0 max(12px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(12px, env(safe-area-inset-left, 0px));
   background: var(--mqpad-surface-raised);
   border-top: 1px solid var(--mqpad-border);
   font-size: 11px;
