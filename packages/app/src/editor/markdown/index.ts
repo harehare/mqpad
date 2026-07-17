@@ -68,6 +68,7 @@ export function buildMarkdownParser(schema: Schema): MarkdownParser {
       getAttrs: (tok) => ({
         query: tok.content.replace(/\n$/, ""),
         result: (tok.meta?.result ?? "").replace(/\n$/, ""),
+        scope: tok.meta?.scope ?? "document",
       }),
     },
     math_block: {
@@ -267,7 +268,7 @@ export function buildMarkdownSerializer(options: MarkdownSerializerOptions = {})
           }
           return;
         }
-        writeFence(state, "mq", node.attrs.query || "");
+        writeFence(state, node.attrs.scope === "vault" ? "mq-vault" : "mq", node.attrs.query || "");
         state.closeBlock(node);
         if (node.attrs.result) {
           writeFence(state, "mq-result", node.attrs.result);

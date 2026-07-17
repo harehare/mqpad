@@ -3,6 +3,8 @@ import type { MarkdownSerializer } from "prosemirror-markdown";
 import { useEffect, useState } from "react";
 import { LuX } from "react-icons/lu";
 import { useMqRunner } from "../mq/MqRunnerContext";
+import { useVaultIndex } from "../mq/VaultIndexContext";
+import { runVaultQuery } from "../mq/runVaultQuery";
 import { serializeToMarkdown } from "./markdown";
 
 export type QueryConsoleProps = {
@@ -20,7 +22,9 @@ export type QueryConsoleProps = {
  */
 export function QueryConsole({ editor, serializer, onClose }: QueryConsoleProps) {
   const runner = useMqRunner();
+  const vaultFiles = useVaultIndex();
   const [query, setQuery] = useState("");
+  const [vaultScope, setVaultScope] = useState(false);
   const [result, setResult] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
@@ -34,9 +38,10 @@ export function QueryConsole({ editor, serializer, onClose }: QueryConsoleProps)
     }
     setRunning(true);
     const timer = setTimeout(() => {
-      const documentMarkdown = serializeToMarkdown(serializer, editor.state.doc);
-      runner
-        .run(query, documentMarkdown)
+      const run = vaultScope
+        ? runVaultQuery(runner, query, vaultFiles)
+        : runner.run(query, serializeToMarkdown(serializer, editor.state.doc));
+      run
         .then((output) => {
           setError(null);
           setResult(output);
@@ -47,12 +52,18 @@ export function QueryConsole({ editor, serializer, onClose }: QueryConsoleProps)
         .finally(() => setRunning(false));
     }, 350);
     return () => clearTimeout(timer);
-  }, [query, editor, serializer, runner]);
+  }, [query, vaultScope, editor, serializer, runner, vaultFiles]);
 
   return (
     <div className="mqpad-query-console">
       <div className="mqpad-query-console-header">
-        <span className="mqpad-query-console-title">Query the whole document</span>
+        <span className="mqpad-query-console-title">
+          Query the whole {vaultScope ? "vault" : "document"}
+        </span>
+        <label className="mqpad-query-console-vault-toggle">
+          <input type="checkbox" checked={vaultScope} onChange={(e) => setVaultScope(e.target.checked)} />
+          Whole vault
+        </label>
         <button type="button" className="mqpad-query-console-close" onClick={onClose} title="Close">
           <LuX size={14} />
         </button>
@@ -78,7 +89,9 @@ export function QueryConsole({ editor, serializer, onClose }: QueryConsoleProps)
           <pre>{result}</pre>
         ) : (
           <span className="mqpad-query-console-status">
-            {query.trim() ? "(no output)" : "Type a query to run it against the whole document"}
+            {query.trim()
+              ? "(no output)"
+              : `Type a query to run it against the whole ${vaultScope ? "vault" : "document"}`}
           </span>
         )}
       </div>

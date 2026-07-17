@@ -119,6 +119,18 @@
   color: var(--mqpad-text-muted);
 }
 
+.mqpad-query-console-vault-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--mqpad-text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  margin-left: auto;
+  margin-right: 6px;
+}
+
 .mqpad-query-console-close {
   display: flex;
   align-items: center;
@@ -324,6 +336,97 @@
 .mqpad-mq-block-hint {
   font-size: 11px;
   color: var(--mqpad-text-muted);
+}
+
+.mqpad-mq-block-ai-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--mqpad-accent);
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+}
+
+.mqpad-mq-block-ai-btn:hover:not(:disabled) {
+  background: var(--mqpad-accent-soft);
+}
+
+.mqpad-mq-block-ai-btn:disabled {
+  color: var(--mqpad-text-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.mqpad-mq-block-ai-popover {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--mqpad-surface-sunken);
+  border-bottom: 1px solid var(--mqpad-border);
+}
+
+.mqpad-mq-block-ai-popover input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--mqpad-border);
+  border-radius: 6px;
+  background: var(--mqpad-surface);
+  color: var(--mqpad-text);
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+.mqpad-mq-block-ai-popover button {
+  border: none;
+  background: var(--mqpad-accent);
+  color: var(--mqpad-accent-contrast, #fff);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mqpad-mq-block-ai-popover button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mqpad-mq-block-scope {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--mqpad-accent);
+  background: var(--mqpad-accent-soft);
+  border-radius: 4px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+}
+
+.mqpad-mq-block-scope-toggle {
+  display: flex;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--mqpad-border);
+}
+
+.mqpad-mq-block-scope-toggle button {
+  border: none;
+  background: transparent;
+  color: var(--mqpad-text-muted);
+  font-size: 11px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.mqpad-mq-block-scope-toggle button.active {
+  background: var(--mqpad-accent);
+  color: var(--mqpad-accent-contrast, #fff);
 }
 
 .mqpad-mq-block-query-wrap {

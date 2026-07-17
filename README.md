@@ -47,13 +47,22 @@ It ships as both a standalone web app (storage in the browser's [OPFS](https://d
 ### Markdown power features
 
 - **Live `mq` blocks** — evaluate against the whole document and re-run automatically as it changes; the result renders the same way the document itself would (headings, lists, tables, links, …), not as raw text.
-- **Query console** — run an ad hoc `mq` query against the whole document without inserting anything into the note.
+- **Vault-wide `mq` blocks** — a ` ```mq-vault ` block (or the "Vault" toggle on any `mq` block) runs its query once per note across the whole vault and combines the non-empty results, each linked back to its note with a `[[WikiLink]]` — a Dataview-style dashboard using the same query language, re-evaluating live as other notes are saved. The query console has a matching "Whole vault" toggle for ad hoc cross-vault queries.
+- **Query console** — run an ad hoc `mq` query against the whole document (or the whole vault) without inserting anything into the note.
 - **Tables** — GFM pipe tables, edited in place (Tab between cells, toolbar/slash-command insert, add/remove rows and columns, toggle header row, column resizing).
 - **Task lists** — `- [ ]` / `- [x]`, with a clickable checkbox that strikes through completed items in the editor; round-trips through Markdown.
 - **Mermaid diagrams** — ` ```mermaid ` fences render live below the source as you type.
 - **KaTeX math** — block `$$...$$` equations render live.
 - **Frontmatter editor** — a collapsible panel above the toolbar exposes the document's leading `---` YAML block as form fields instead of raw text. Each field gets a type-appropriate input (text, number, checkbox, or a tag list for arrays); add/remove fields freely and they round-trip straight back into the YAML block on save.
 - **Syntax highlighting** — fenced code blocks (with line numbers) and `mq` query blocks, via [Shiki](https://shiki.style) and `mq`'s own grammar.
+
+### AI (Chrome's built-in on-device model, no key required)
+
+Two AI features use [Chrome's built-in Prompt API](https://developer.chrome.com/docs/ai/prompt-api) (Gemini Nano, running entirely on-device) instead of a cloud provider — no API key, no account, no backend call. They're only available in Chrome (desktop, with sufficient disk/GPU for the on-device model); the "Ask AI" buttons are simply disabled everywhere else, including the VS Code extension. Neither feature ever edits your note silently — every AI output lands somewhere you review before it takes effect.
+
+- **AI-drafted `mq` queries** — inside any `mq` block, click the sparkle button and describe what you want ("list headings that mention TODO") in plain language. The draft lands in the query box for you to review and edit; it never runs on its own — you still trigger evaluation the normal way (click away from the block).
+- **Ask AI on a selection** — select text and use the toolbar's sparkle button for quick actions (fix grammar, improve writing, shorten, expand) or a free-text instruction. The suggestion is shown as an inline word-level diff against your original text — nothing is applied until you hit Accept.
+- The first use in a browser profile downloads Chrome's on-device model (a few GB); the button shows download progress and becomes a normal "Generate" once it's cached.
 
 ### Organization
 

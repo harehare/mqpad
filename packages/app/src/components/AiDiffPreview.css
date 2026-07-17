@@ -1,0 +1,51 @@
+.mqpad-ai-diff {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--mqpad-surface-sunken);
+  border-top: 1px solid var(--mqpad-border);
+}
+
+.mqpad-ai-diff-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--mqpad-text);
+  white-space: pre-wrap;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.mqpad-ai-diff-removed {
+  color: var(--mqpad-error, #e08a73);
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+
+.mqpad-ai-diff-added {
+  color: var(--mqpad-accent);
+  text-decoration: underline;
+}
+
+.mqpad-ai-diff-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.mqpad-ai-diff-actions button {
+  border: 1px solid var(--mqpad-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--mqpad-text);
+  padding: 5px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.mqpad-ai-diff-actions button.primary {
+  background: var(--mqpad-accent);
+  border-color: var(--mqpad-accent);
+  color: var(--mqpad-accent-contrast, #fff);
+  font-weight: 600;
+}

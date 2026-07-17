@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { VscGear } from "react-icons/vsc";
 import { LuCode, LuFocus, LuPanelLeft } from "react-icons/lu";
 import type { FileSystem, FileNode } from "./fs/types";
 import { MqRunnerProvider, type MqRunner } from "./mq/MqRunnerContext";
+import { VaultIndexProvider, type VaultFile } from "./mq/VaultIndexContext";
+import { AiProvider } from "./ai/AiContext";
 import { MqpadEditor, type EditorStats } from "./editor/Editor";
 import { SourceView } from "./editor/SourceView";
 import { FileTree } from "./components/FileTree";
@@ -85,6 +87,15 @@ export function App({
   const [preferences, setPreferences] = usePreferences();
   const [pinnedPaths, togglePin] = usePinnedNotes();
   const { metaByPath, contentByPath, backlinksByPath, refreshPath: refreshNoteIndexPath } = useNoteIndex(fs, files);
+  const vaultFiles = useMemo<VaultFile[]>(
+    () =>
+      Object.entries(contentByPath).map(([path, content]) => ({
+        path,
+        title: (path.split("/").pop() ?? path).replace(/\.(md|markdown)$/i, ""),
+        content,
+      })),
+    [contentByPath],
+  );
   const [fsReady, setFsReady] = useState(false);
   const [stats, setStats] = useState<EditorStats | null>(null);
   const [sourceMode, setSourceMode] = useState(false);
@@ -447,143 +458,147 @@ export function App({
 
   return (
     <MqRunnerProvider value={mqRunner}>
-      <div className={`mqpad-app ${focusMode ? "mqpad-focus-mode" : ""}`}>
-        <div className="mqpad-titlebar">
-          <div className="mqpad-titlebar-brand">
-            <Logo size={18} />
-            <span className="mqpad-titlebar-title">mqpad</span>
-          </div>
-          <div className="mqpad-titlebar-actions">
-            <button
-              className={`mqpad-titlebar-settings ${sidebarVisible ? "active" : ""}`}
-              onClick={() => setSidebarVisible((v) => !v)}
-              title="Toggle File Tree (Cmd+B)"
-            >
-              <LuPanelLeft size={16} />
-            </button>
-            <button
-              className={`mqpad-titlebar-settings ${sourceMode ? "active" : ""}`}
-              onClick={() => setSourceMode((v) => !v)}
-              title="Toggle Markdown Source Mode (Cmd+Shift+M)"
-            >
-              <LuCode size={16} />
-            </button>
-            <button
-              className={`mqpad-titlebar-settings ${focusMode ? "active" : ""}`}
-              onClick={() => setFocusMode((v) => !v)}
-              title="Toggle Focus Mode (Cmd+Shift+Enter)"
-            >
-              <LuFocus size={16} />
-            </button>
-            <button className="mqpad-titlebar-settings" onClick={() => setSettingsOpen(true)} title="Settings">
-              <VscGear size={16} />
-            </button>
-          </div>
-        </div>
-        <div className="mqpad-body">
-          {sidebarVisible && (
-            <div className="mqpad-sidebar-backdrop" onClick={() => setSidebarVisible(false)} />
-          )}
-          <div className={`mqpad-sidebar ${sidebarVisible ? "" : "mqpad-sidebar-hidden"}`}>
-            <FileTree
-              files={files}
-              onFileSelect={(path) => {
-                openFile(path);
-                if (isMobileViewport()) setSidebarVisible(false);
-              }}
-              onRefresh={refreshFiles}
-              onCreateFile={handleCreateFile}
-              onCreateFolder={handleCreateFolder}
-              onDeleteFile={handleDeleteFile}
-              onRenameFile={handleRenameFile}
-              onMoveFile={handleMoveFile}
-              selectedFile={activePath}
-              pinnedPaths={pinnedPaths}
-              onTogglePin={togglePin}
-              metaByPath={metaByPath}
-              contentByPath={contentByPath}
+      <VaultIndexProvider value={vaultFiles}>
+        <AiProvider>
+          <div className={`mqpad-app ${focusMode ? "mqpad-focus-mode" : ""}`}>
+            <div className="mqpad-titlebar">
+              <div className="mqpad-titlebar-brand">
+                <Logo size={18} />
+                <span className="mqpad-titlebar-title">mqpad</span>
+              </div>
+              <div className="mqpad-titlebar-actions">
+                <button
+                  className={`mqpad-titlebar-settings ${sidebarVisible ? "active" : ""}`}
+                  onClick={() => setSidebarVisible((v) => !v)}
+                  title="Toggle File Tree (Cmd+B)"
+                >
+                  <LuPanelLeft size={16} />
+                </button>
+                <button
+                  className={`mqpad-titlebar-settings ${sourceMode ? "active" : ""}`}
+                  onClick={() => setSourceMode((v) => !v)}
+                  title="Toggle Markdown Source Mode (Cmd+Shift+M)"
+                >
+                  <LuCode size={16} />
+                </button>
+                <button
+                  className={`mqpad-titlebar-settings ${focusMode ? "active" : ""}`}
+                  onClick={() => setFocusMode((v) => !v)}
+                  title="Toggle Focus Mode (Cmd+Shift+Enter)"
+                >
+                  <LuFocus size={16} />
+                </button>
+                <button className="mqpad-titlebar-settings" onClick={() => setSettingsOpen(true)} title="Settings">
+                  <VscGear size={16} />
+                </button>
+              </div>
+            </div>
+            <div className="mqpad-body">
+              {sidebarVisible && (
+                <div className="mqpad-sidebar-backdrop" onClick={() => setSidebarVisible(false)} />
+              )}
+              <div className={`mqpad-sidebar ${sidebarVisible ? "" : "mqpad-sidebar-hidden"}`}>
+                <FileTree
+                  files={files}
+                  onFileSelect={(path) => {
+                    openFile(path);
+                    if (isMobileViewport()) setSidebarVisible(false);
+                  }}
+                  onRefresh={refreshFiles}
+                  onCreateFile={handleCreateFile}
+                  onCreateFolder={handleCreateFolder}
+                  onDeleteFile={handleDeleteFile}
+                  onRenameFile={handleRenameFile}
+                  onMoveFile={handleMoveFile}
+                  selectedFile={activePath}
+                  pinnedPaths={pinnedPaths}
+                  onTogglePin={togglePin}
+                  metaByPath={metaByPath}
+                  contentByPath={contentByPath}
+                />
+              </div>
+              <div className="mqpad-main">
+                <TabBar tabs={tabs} activeTabId={activePath} onTabClick={openFile} onTabClose={closeTab} />
+                {activePath && activeConflict !== undefined && (
+                  <FileChangedBanner
+                    message="This file changed on disk outside mqpad."
+                    actions={[
+                      { label: "Reload from disk", onClick: () => resolveConflict(activePath, true) },
+                      { label: "Keep my edits", onClick: () => resolveConflict(activePath, false) },
+                    ]}
+                  />
+                )}
+                {activePath && activeConflict === undefined && reloadedPath === activePath && (
+                  <FileChangedBanner
+                    message="Reloaded — this file was updated outside mqpad."
+                    onDismiss={() => setReloadedPath(null)}
+                  />
+                )}
+                <div className="mqpad-editor-area">
+                  {activePath ? (
+                    sourceMode ? (
+                      <SourceView
+                        markdown={activeContent}
+                        onChange={handleEditorChange}
+                        direction={preferences.direction}
+                      />
+                    ) : (
+                      <MqpadEditor
+                        key={activePath}
+                        markdown={activeContent}
+                        onChange={handleEditorChange}
+                        onNavigate={openFile}
+                        resolveWikiLinkTarget={resolveWikiLinkTarget}
+                        ensureWikiLinkFileExists={ensureWikiLinkFileExists}
+                        onStatsChange={setStats}
+                        direction={preferences.direction}
+                      />
+                    )
+                  ) : (
+                    <div className="mqpad-empty-state">
+                      <Logo size={36} />
+                      <p>Select or create a file to start editing.</p>
+                    </div>
+                  )}
+                </div>
+                {activePath && activeBacklinks.length > 0 && <Backlinks paths={activeBacklinks} onNavigate={openFile} />}
+              </div>
+            </div>
+            <StatusBar
+              activePath={activePath}
+              isDirty={activeIsDirty}
+              stats={activePath ? stats : null}
+              vaultRootLabel={vaultRootLabel}
+              themeLabel={THEME_LABELS[theme]}
             />
           </div>
-          <div className="mqpad-main">
-            <TabBar tabs={tabs} activeTabId={activePath} onTabClick={openFile} onTabClose={closeTab} />
-            {activePath && activeConflict !== undefined && (
-              <FileChangedBanner
-                message="This file changed on disk outside mqpad."
-                actions={[
-                  { label: "Reload from disk", onClick: () => resolveConflict(activePath, true) },
-                  { label: "Keep my edits", onClick: () => resolveConflict(activePath, false) },
-                ]}
-              />
-            )}
-            {activePath && activeConflict === undefined && reloadedPath === activePath && (
-              <FileChangedBanner
-                message="Reloaded — this file was updated outside mqpad."
-                onDismiss={() => setReloadedPath(null)}
-              />
-            )}
-            <div className="mqpad-editor-area">
-              {activePath ? (
-                sourceMode ? (
-                  <SourceView
-                    markdown={activeContent}
-                    onChange={handleEditorChange}
-                    direction={preferences.direction}
-                  />
-                ) : (
-                  <MqpadEditor
-                    key={activePath}
-                    markdown={activeContent}
-                    onChange={handleEditorChange}
-                    onNavigate={openFile}
-                    resolveWikiLinkTarget={resolveWikiLinkTarget}
-                    ensureWikiLinkFileExists={ensureWikiLinkFileExists}
-                    onStatsChange={setStats}
-                    direction={preferences.direction}
-                  />
-                )
-              ) : (
-                <div className="mqpad-empty-state">
-                  <Logo size={36} />
-                  <p>Select or create a file to start editing.</p>
-                </div>
-              )}
-            </div>
-            {activePath && activeBacklinks.length > 0 && <Backlinks paths={activeBacklinks} onNavigate={openFile} />}
-          </div>
-        </div>
-        <StatusBar
-          activePath={activePath}
-          isDirty={activeIsDirty}
-          stats={activePath ? stats : null}
-          vaultRootLabel={vaultRootLabel}
-          themeLabel={THEME_LABELS[theme]}
-        />
-      </div>
-      {settingsOpen && (
-        <SettingsDialog
-          vaultRootLabel={vaultRootLabel}
-          vaultRoot={vaultRoot}
-          vaultRootEditable={vaultRootEditable}
-          theme={theme}
-          onThemeChange={setTheme}
-          preferences={preferences}
-          onPreferencesChange={setPreferences}
-          onSave={onVaultRootChange}
-          onClose={() => setSettingsOpen(false)}
-        />
-      )}
-      {paletteOpen && <CommandPalette commands={commands} onClose={() => setPaletteOpen(false)} />}
-      {quickOpenOpen && (
-        <QuickOpen paths={flattenMarkdownPaths(files)} onSelect={openFile} onClose={() => setQuickOpenOpen(false)} />
-      )}
-      {welcomeOpen && (
-        <WelcomeDialog
-          onClose={() => {
-            setWelcomeOpen(false);
-            markWelcomeSeen();
-          }}
-        />
-      )}
+          {settingsOpen && (
+            <SettingsDialog
+              vaultRootLabel={vaultRootLabel}
+              vaultRoot={vaultRoot}
+              vaultRootEditable={vaultRootEditable}
+              theme={theme}
+              onThemeChange={setTheme}
+              preferences={preferences}
+              onPreferencesChange={setPreferences}
+              onSave={onVaultRootChange}
+              onClose={() => setSettingsOpen(false)}
+            />
+          )}
+          {paletteOpen && <CommandPalette commands={commands} onClose={() => setPaletteOpen(false)} />}
+          {quickOpenOpen && (
+            <QuickOpen paths={flattenMarkdownPaths(files)} onSelect={openFile} onClose={() => setQuickOpenOpen(false)} />
+          )}
+          {welcomeOpen && (
+            <WelcomeDialog
+              onClose={() => {
+                setWelcomeOpen(false);
+                markWelcomeSeen();
+              }}
+            />
+          )}
+        </AiProvider>
+      </VaultIndexProvider>
     </MqRunnerProvider>
   );
 }

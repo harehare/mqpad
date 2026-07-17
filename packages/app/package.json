@@ -27,6 +27,7 @@
     "@tiptap/react": "^3.27.1",
     "@tiptap/starter-kit": "^3.27.1",
     "@tiptap/suggestion": "^3.27.1",
+    "diff": "^9.0.0",
     "fflate": "^0.8.3",
     "katex": "^0.17.0",
     "markdown-it": "^14.1.0",
@@ -39,6 +40,7 @@
     "yaml": "^2.9.0"
   },
   "devDependencies": {
+    "@types/dom-chromium-ai": "^0.0.17",
     "@types/katex": "^0.16.8",
     "@types/markdown-it": "^14.1.2",
     "@types/react": "^19.2.17",

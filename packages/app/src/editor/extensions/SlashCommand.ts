@@ -91,7 +91,19 @@ const ITEMS: SlashItem[] = [
         .chain()
         .focus()
         .deleteRange(range)
-        .insertContent({ type: "mqCodeBlock", attrs: { query: "", result: "" } })
+        .insertContent({ type: "mqCodeBlock", attrs: { query: "", result: "", scope: "document" } })
+        .run(),
+  },
+  {
+    id: "mq-vault",
+    label: "mq Vault Query Block",
+    hint: "```mq-vault",
+    run: (editor, range) =>
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent({ type: "mqCodeBlock", attrs: { query: "", result: "", scope: "vault" } })
         .run(),
   },
   {
