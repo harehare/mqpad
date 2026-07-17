@@ -31,6 +31,7 @@ createRoot(rootEl).render(
       vaultRootEditable={false}
       onVaultRootChange={openVaultPathSettings}
       initialPath={initialPath}
+      quickOpenHotkeyEnabled={false}
     />
   </StrictMode>,
 );

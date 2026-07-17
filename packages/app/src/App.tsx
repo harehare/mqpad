@@ -49,6 +49,13 @@ export type AppProps = {
   initialPath?: string;
   /** Called whenever the open file changes, so a host (e.g. the web app) can reflect it in the URL. */
   onActivePathChange?: (path: string | null) => void;
+  /**
+   * Whether Cmd/Ctrl+P opens the fuzzy file switcher. Hosts that embed mqpad
+   * inside another editor with its own reserved Cmd/Ctrl+P (e.g. the VS Code
+   * extension's "Go to File") should set this to false so both don't open at
+   * once; Quick Open remains reachable from the command palette either way.
+   */
+  quickOpenHotkeyEnabled?: boolean;
 };
 
 type OpenFile = {
@@ -77,6 +84,7 @@ export function App({
   onVaultRootChange,
   initialPath,
   onActivePathChange,
+  quickOpenHotkeyEnabled = true,
 }: AppProps) {
   const [files, setFiles] = useState<FileNode[]>([]);
   const [openFiles, setOpenFiles] = useState<Record<string, OpenFile>>({});
@@ -376,7 +384,8 @@ export function App({
 
   // Global shortcuts: Cmd/Ctrl+Shift+M toggles raw markdown source mode,
   // Cmd/Ctrl+Shift+Enter toggles distraction-free focus mode, Cmd/Ctrl+K
-  // opens the command palette, Cmd/Ctrl+P opens the fuzzy file switcher.
+  // opens the command palette, Cmd/Ctrl+P opens the fuzzy file switcher
+  // (when quickOpenHotkeyEnabled - see AppProps).
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isShortcut(e, "m", true)) {
@@ -391,7 +400,7 @@ export function App({
       } else if (isShortcut(e, "k")) {
         e.preventDefault();
         setPaletteOpen((v) => !v);
-      } else if (isShortcut(e, "p")) {
+      } else if (quickOpenHotkeyEnabled && isShortcut(e, "p")) {
         e.preventDefault();
         setQuickOpenOpen((v) => !v);
       } else if (e.key === "Escape" && paletteOpen) {
@@ -402,13 +411,13 @@ export function App({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [paletteOpen, quickOpenOpen]);
+  }, [paletteOpen, quickOpenOpen, quickOpenHotkeyEnabled]);
 
   const commands: Command[] = [
     {
       id: "quick-open",
       label: "Quick Open...",
-      hint: "Cmd+P",
+      hint: quickOpenHotkeyEnabled ? "Cmd+P" : undefined,
       onRun: () => setQuickOpenOpen(true),
     },
     {
