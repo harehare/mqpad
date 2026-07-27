@@ -64,6 +64,11 @@
           "type": "string",
           "default": "",
           "description": "Folder mqpad treats as its vault root, relative to the workspace folder. Empty means the workspace root."
+        },
+        "mqpad.showFileTree": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show mqpad's own file tree sidebar. Off by default since VS Code's Explorer already lists your files; you can still toggle it per-session with Cmd/Ctrl+B."
         }
       }
     },
@@ -88,7 +93,7 @@
   },
   "dependencies": {
     "ignore": "^7.0.5",
-    "mq-web": "^0.6.5",
+    "mq-web": "^0.7.0",
     "mqpad-app": "workspace:*",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"

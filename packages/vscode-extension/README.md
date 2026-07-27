@@ -31,6 +31,7 @@ File I/O goes through `vscode.workspace.fs`, so notes are regular files in your 
 ## Settings
 
 - **`mqpad.vaultPath`** — folder mqpad treats as its vault root, relative to the workspace folder. Empty means the workspace root.
+- **`mqpad.showFileTree`** — show mqpad's own file tree sidebar. `false` by default, since VS Code's Explorer already lists your files; toggle it per-session with `Cmd/Ctrl+B`, the sidebar button, or the command palette.
 
 ## Learn more
 

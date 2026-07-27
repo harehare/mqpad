@@ -20,7 +20,15 @@ function getVaultUri(): vscode.Uri {
   return vaultPath ? vscode.Uri.joinPath(root, vaultPath) : root;
 }
 
-function buildWebviewHtml(webview: vscode.Webview, context: vscode.ExtensionContext, initialPath?: string): string {
+interface WebviewHtmlOptions {
+  initialPath?: string;
+}
+
+function buildWebviewHtml(
+  webview: vscode.Webview,
+  context: vscode.ExtensionContext,
+  options: WebviewHtmlOptions = {},
+): string {
   const distWebviewUri = vscode.Uri.joinPath(context.extensionUri, "dist", "webview");
   const indexPath = vscode.Uri.joinPath(distWebviewUri, "index.html").fsPath;
   const raw = fs.readFileSync(indexPath, "utf8");
@@ -38,13 +46,18 @@ function buildWebviewHtml(webview: vscode.Webview, context: vscode.ExtensionCont
     `connect-src ${webview.cspSource} https:`,
   ].join("; ");
 
-  const initialPathScript = initialPath
-    ? `\n    <script>window.__mqpadInitialPath = ${JSON.stringify(initialPath)};</script>`
+  // VS Code already shows its own Explorer alongside the panel, so mqpad's
+  // own file tree defaults to collapsed here (unlike the standalone web
+  // app) to avoid two competing trees; see `mqpad.showFileTree`.
+  const showFileTree = vscode.workspace.getConfiguration("mqpad").get<boolean>("showFileTree", false);
+  const initialPathScript = options.initialPath
+    ? `\n    <script>window.__mqpadInitialPath = ${JSON.stringify(options.initialPath)};</script>`
     : "";
+  const showFileTreeScript = `\n    <script>window.__mqpadShowFileTree = ${JSON.stringify(showFileTree)};</script>`;
 
   return withAssets.replace(
     "<head>",
-    `<head>\n    <meta http-equiv="Content-Security-Policy" content="${csp}">${initialPathScript}`,
+    `<head>\n    <meta http-equiv="Content-Security-Policy" content="${csp}">${initialPathScript}${showFileTreeScript}`,
   );
 }
 
@@ -113,7 +126,7 @@ class MqpadPreviewEditorProvider implements vscode.CustomTextEditorProvider {
       enableScripts: true,
       localResourceRoots: [vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview")],
     };
-    panel.webview.html = buildWebviewHtml(panel.webview, this.context, initialPath);
+    panel.webview.html = buildWebviewHtml(panel.webview, this.context, { initialPath });
 
     panel.webview.onDidReceiveMessage((message: unknown) => {
       if (isFsRequestMessage(message)) {

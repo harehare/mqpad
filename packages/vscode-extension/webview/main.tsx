@@ -18,6 +18,11 @@ function openVaultPathSettings(): void {
 // "mqpad: Open" panel.
 const initialPath = (window as typeof window & { __mqpadInitialPath?: string }).__mqpadInitialPath;
 
+// Set by the extension host from the `mqpad.showFileTree` setting (see
+// buildWebviewHtml in extension.ts). Defaults to false: VS Code's own
+// Explorer already shows the file tree, so mqpad's starts collapsed here.
+const showFileTree = (window as typeof window & { __mqpadShowFileTree?: boolean }).__mqpadShowFileTree ?? false;
+
 const rootEl = document.getElementById("root");
 if (!rootEl) throw new Error("Missing #root element");
 
@@ -32,6 +37,7 @@ createRoot(rootEl).render(
       onVaultRootChange={openVaultPathSettings}
       initialPath={initialPath}
       quickOpenHotkeyEnabled={false}
+      defaultSidebarVisible={showFileTree}
     />
   </StrictMode>,
 );
