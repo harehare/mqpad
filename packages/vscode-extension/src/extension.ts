@@ -24,6 +24,13 @@ interface WebviewHtmlOptions {
   initialPath?: string;
 }
 
+function getNonce(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let text = "";
+  for (let i = 0; i < 32; i++) text += chars.charAt(Math.floor(Math.random() * chars.length));
+  return text;
+}
+
 function buildWebviewHtml(
   webview: vscode.Webview,
   context: vscode.ExtensionContext,
@@ -38,11 +45,17 @@ function buildWebviewHtml(
     return `${attr}="${base}/${assetPath}"`;
   });
 
+  // Inline <script> tags below need this nonce in both their `nonce`
+  // attribute and the CSP's script-src, otherwise the webview's CSP silently
+  // drops them - leaving window.__mqpadInitialPath unset and the "Open in
+  // mqpad" custom editor opening blank instead of the picked file.
+  const nonce = getNonce();
+
   const csp = [
     "default-src 'none'",
     `img-src ${webview.cspSource} https: data:`,
     `style-src ${webview.cspSource} 'unsafe-inline'`,
-    `script-src ${webview.cspSource} 'wasm-unsafe-eval'`,
+    `script-src ${webview.cspSource} 'wasm-unsafe-eval' 'nonce-${nonce}'`,
     `connect-src ${webview.cspSource} https:`,
   ].join("; ");
 
@@ -51,9 +64,9 @@ function buildWebviewHtml(
   // app) to avoid two competing trees; see `mqpad.showFileTree`.
   const showFileTree = vscode.workspace.getConfiguration("mqpad").get<boolean>("showFileTree", false);
   const initialPathScript = options.initialPath
-    ? `\n    <script>window.__mqpadInitialPath = ${JSON.stringify(options.initialPath)};</script>`
+    ? `\n    <script nonce="${nonce}">window.__mqpadInitialPath = ${JSON.stringify(options.initialPath)};</script>`
     : "";
-  const showFileTreeScript = `\n    <script>window.__mqpadShowFileTree = ${JSON.stringify(showFileTree)};</script>`;
+  const showFileTreeScript = `\n    <script nonce="${nonce}">window.__mqpadShowFileTree = ${JSON.stringify(showFileTree)};</script>`;
 
   return withAssets.replace(
     "<head>",
