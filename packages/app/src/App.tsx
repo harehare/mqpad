@@ -140,7 +140,12 @@ export function App({
   }, [openFiles]);
 
   const refreshFiles = useCallback(async () => {
-    setFiles(await fs.listFiles("/"));
+    setFiles(
+      await fs.listFiles("/").catch((error) => {
+        console.error("mqpad: failed to list files", error);
+        return [];
+      }),
+    );
   }, [fs]);
 
   const handleExternalChange = useCallback(
@@ -167,9 +172,14 @@ export function App({
   }, [reloadedPath]);
 
   useEffect(() => {
+    // Always flips fsReady, even if the initial listing fails - otherwise a
+    // single failed `listFiles` (e.g. a transient fs error) leaves the app
+    // stuck forever on the empty state, since `initialPath` auto-open also
+    // waits on fsReady.
     fs.initialize()
       .then(refreshFiles)
-      .then(() => setFsReady(true));
+      .catch((error) => console.error("mqpad: failed to initialize filesystem", error))
+      .finally(() => setFsReady(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fs]);
 
