@@ -93,7 +93,7 @@
   },
   "dependencies": {
     "ignore": "^7.0.5",
-    "mq-web": "^0.6.5",
+    "mq-web": "^0.7.0",
     "mqpad-app": "workspace:*",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
