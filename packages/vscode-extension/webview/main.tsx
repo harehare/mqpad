@@ -12,6 +12,33 @@ function openVaultPathSettings(): void {
   vscodeApi.postMessage({ source: "mqpad-open-settings" });
 }
 
+/**
+ * Dropping a file from VS Code's own Explorer (or an open editor tab) onto
+ * this panel sets `text/uri-list` on the drag, same as dropping onto any
+ * other web content - so this needs no special VS Code API, just the
+ * standard HTML5 DnD events. The webview has no filesystem access itself, so
+ * it just forwards the raw URIs to the extension host (see
+ * `openDroppedPaths` in extension.ts), which resolves and opens them via the
+ * same command as the Explorer's "Open in mqpad" entry.
+ */
+function handleDragOver(e: DragEvent): void {
+  if (e.dataTransfer?.types.includes("text/uri-list")) e.preventDefault();
+}
+
+function handleDrop(e: DragEvent): void {
+  const uriList = e.dataTransfer?.getData("text/uri-list");
+  if (!uriList) return;
+  e.preventDefault();
+  const uris = uriList
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#"));
+  if (uris.length > 0) vscodeApi.postMessage({ source: "mqpad-open-external-path", uris });
+}
+
+window.addEventListener("dragover", handleDragOver);
+window.addEventListener("drop", handleDrop);
+
 // Set by the extension host's "Open With > mqpad" custom editor (see
 // MqpadPreviewEditorProvider in extension.ts) to open straight into the file
 // the user picked, rather than the vault root. Absent for the normal

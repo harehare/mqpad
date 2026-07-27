@@ -17,6 +17,7 @@ File I/O goes through `vscode.workspace.fs`, so notes are regular files in your 
 
 - **`mqpad: Open`** (command palette) — opens the mqpad panel rooted at the configured vault folder (see Settings below).
 - **`Open in mqpad`** (Explorer context menu, on `.md`/`.markdown` files) — opens that file directly in the mqpad custom editor, even without a vault configured.
+- **Drag & drop** — drag a `.md`/`.markdown` file from the Explorer or an open tab onto a mqpad panel to open it, same as `Open in mqpad`.
 
 ## Features
 

@@ -9,6 +9,37 @@ function isOpenSettingsMessage(value: unknown): boolean {
   );
 }
 
+function isOpenExternalPathMessage(value: unknown): value is { source: string; uris: unknown[] } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (value as { source?: unknown }).source === "mqpad-open-external-path" &&
+    Array.isArray((value as { uris?: unknown }).uris)
+  );
+}
+
+/**
+ * Handles `.md`/`.markdown` files dropped onto a mqpad panel from VS Code's
+ * own Explorer/tabs (see the `dragover`/`drop` listeners in webview/main.tsx,
+ * which forward `text/uri-list` here since the webview itself has no
+ * filesystem access to resolve or validate the dropped paths). Reuses the
+ * same "Open in mqpad" command as the Explorer context menu entry, rather
+ * than reimplementing vault-relative path resolution here.
+ */
+async function openDroppedPaths(uris: unknown[]): Promise<void> {
+  for (const raw of uris) {
+    if (typeof raw !== "string") continue;
+    let uri: vscode.Uri;
+    try {
+      uri = vscode.Uri.parse(raw, true);
+    } catch {
+      continue;
+    }
+    if (uri.scheme !== "file" || !/\.(md|markdown)$/i.test(uri.path)) continue;
+    await vscode.commands.executeCommand("mqpad.openFile", uri);
+  }
+}
+
 function getVaultUri(): vscode.Uri {
   const folders = vscode.workspace.workspaceFolders;
   if (!folders || folders.length === 0) {
@@ -93,6 +124,10 @@ function openMqpadPanel(context: vscode.ExtensionContext): void {
     }
     if (isOpenSettingsMessage(message)) {
       void vscode.commands.executeCommand("workbench.action.openSettings", "mqpad.vaultPath");
+      return;
+    }
+    if (isOpenExternalPathMessage(message)) {
+      void openDroppedPaths(message.uris);
     }
   });
 
@@ -149,6 +184,10 @@ class MqpadPreviewEditorProvider implements vscode.CustomTextEditorProvider {
       }
       if (isOpenSettingsMessage(message)) {
         void vscode.commands.executeCommand("workbench.action.openSettings", "mqpad.vaultPath");
+        return;
+      }
+      if (isOpenExternalPathMessage(message)) {
+        void openDroppedPaths(message.uris);
       }
     });
 
