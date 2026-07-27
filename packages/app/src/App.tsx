@@ -56,6 +56,15 @@ export type AppProps = {
    * once; Quick Open remains reachable from the command palette either way.
    */
   quickOpenHotkeyEnabled?: boolean;
+  /**
+   * Initial visibility of mqpad's own file tree sidebar. Defaults to the
+   * viewport-based heuristic below. Hosts with their own file explorer
+   * already on screen (e.g. the VS Code extension, next to VS Code's
+   * Explorer) can set this to false so the two trees don't compete for
+   * space; the user can still toggle it back on (Cmd/Ctrl+B, the sidebar
+   * button, or the command palette).
+   */
+  defaultSidebarVisible?: boolean;
 };
 
 type OpenFile = {
@@ -85,6 +94,7 @@ export function App({
   initialPath,
   onActivePathChange,
   quickOpenHotkeyEnabled = true,
+  defaultSidebarVisible,
 }: AppProps) {
   const [files, setFiles] = useState<FileNode[]>([]);
   const [openFiles, setOpenFiles] = useState<Record<string, OpenFile>>({});
@@ -108,7 +118,9 @@ export function App({
   const [stats, setStats] = useState<EditorStats | null>(null);
   const [sourceMode, setSourceMode] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
-  const [sidebarVisible, setSidebarVisible] = useState(() => !isMobileViewport());
+  const [sidebarVisible, setSidebarVisible] = useState(
+    () => defaultSidebarVisible ?? !isMobileViewport(),
+  );
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [quickOpenOpen, setQuickOpenOpen] = useState(false);
   const [welcomeSeen, markWelcomeSeen] = useFirstRun();
