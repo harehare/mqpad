@@ -55,6 +55,7 @@ function buildWebviewHtml(
     "default-src 'none'",
     `img-src ${webview.cspSource} https: data:`,
     `style-src ${webview.cspSource} 'unsafe-inline'`,
+    `font-src ${webview.cspSource}`,
     `script-src ${webview.cspSource} 'wasm-unsafe-eval' 'nonce-${nonce}'`,
     `connect-src ${webview.cspSource} https:`,
   ].join("; ");
