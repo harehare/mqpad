@@ -81,3 +81,13 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.mqpad-find-match {
+  background: var(--mqpad-accent-soft);
+  border-radius: 2px;
+}
+
+.mqpad-find-match-active {
+  background: var(--mqpad-accent);
+  color: var(--mqpad-accent-contrast);
+}
