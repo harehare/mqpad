@@ -45,11 +45,19 @@
       },
       {
         "command": "mqpad.openFile",
-        "title": "Open in mqpad"
+        "title": "Open in mqpad",
+        "icon": "$(open-preview)"
       }
     ],
     "menus": {
       "explorer/context": [
+        {
+          "command": "mqpad.openFile",
+          "when": "resourceExtname == .md || resourceExtname == .markdown",
+          "group": "navigation"
+        }
+      ],
+      "editor/title": [
         {
           "command": "mqpad.openFile",
           "when": "resourceExtname == .md || resourceExtname == .markdown",
