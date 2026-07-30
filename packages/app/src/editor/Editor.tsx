@@ -16,6 +16,7 @@ import { clipboardTextParser, handleMarkdownPaste } from "./markdown/clipboardTe
 import { CodeBlockHighlight } from "./extensions/CodeBlockHighlight";
 import { CodeBlockWithPreview } from "./extensions/CodeBlockWithPreview";
 import { EditorToolbar } from "./EditorToolbar";
+import { FindAndReplace } from "./extensions/FindAndReplace";
 import { FrontmatterPanel } from "./FrontmatterPanel";
 import { dataToRows, parseFrontmatter, rowsToData, stringifyFrontmatter, type FrontmatterRow } from "./frontmatter";
 import { MathBlock } from "./extensions/MathBlock";
@@ -110,6 +111,7 @@ export function MqpadEditor({
       TableCell,
       TaskList,
       TaskItem.configure({ nested: true }),
+      FindAndReplace,
       WikiLink.configure(wikiLinkOptions),
       MqCodeBlock.configure({
         serializeDocument: (ed: TiptapEditor) => serializeToMarkdown(serializer, ed.state.doc),

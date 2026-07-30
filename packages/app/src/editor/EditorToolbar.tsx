@@ -1,7 +1,7 @@
 import { type Editor as TiptapEditor, useEditorState } from "@tiptap/react";
 import { Slice } from "@tiptap/pm/model";
 import type { MarkdownSerializer } from "prosemirror-markdown";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   LuBold,
   LuCheck,
@@ -18,11 +18,13 @@ import {
   LuListTodo,
   LuRedo2,
   LuRows3,
+  LuSearch,
   LuSeparatorHorizontal,
   LuSparkles,
   LuStrikethrough,
   LuTable,
   LuTableColumnsSplit,
+  LuTableOfContents,
   LuTableProperties,
   LuTableRowsSplit,
   LuTerminal,
@@ -36,6 +38,9 @@ import { aiAvailabilityTooltip } from "../ai/availabilityMessage";
 import { buildEditPrompt } from "../ai/editPrompt";
 import { buildMarkdownParser, buildMarkdownSerializer, serializeToMarkdown } from "./markdown";
 import { AiSelectionPopover } from "./AiSelectionPopover";
+import { FindReplacePanel } from "./FindReplacePanel";
+import { computeOutline } from "./computeOutline";
+import { Outline } from "./Outline";
 import { QueryConsole } from "./QueryConsole";
 
 export type EditorToolbarProps = {
@@ -54,6 +59,8 @@ export function EditorToolbar({ editor, serializer }: EditorToolbarProps) {
   const [aiRange, setAiRange] = useState<SelectionRange | null>(null);
   const [aiOriginalText, setAiOriginalText] = useState("");
   const [copied, setCopied] = useState(false);
+  const [findOpen, setFindOpen] = useState(false);
+  const [outlineOpen, setOutlineOpen] = useState(false);
 
   const state = useEditorState({
     editor,
@@ -75,8 +82,24 @@ export function EditorToolbar({ editor, serializer }: EditorToolbarProps) {
       link: ed.isActive("link"),
       inTable: ed.isActive("table"),
       hasSelection: !ed.state.selection.empty,
+      outline: computeOutline(ed.state.doc),
     }),
   });
+
+  // Cmd/Ctrl+F while the editor has focus opens the find bar instead of the
+  // browser's own find-in-page (which can't see into a contentEditable's
+  // reflowing text anyway).
+  useEffect(() => {
+    const dom = editor.view.dom;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        setFindOpen((open) => !open);
+      }
+    };
+    dom.addEventListener("keydown", handleKeyDown);
+    return () => dom.removeEventListener("keydown", handleKeyDown);
+  }, [editor]);
 
   const openLinkPopover = () => {
     setLinkValue((editor.getAttributes("link").href as string | undefined) ?? "");
@@ -312,6 +335,22 @@ export function EditorToolbar({ editor, serializer }: EditorToolbarProps) {
         </button>
         <button
           type="button"
+          className={`mqpad-toolbar-btn ${outlineOpen ? "active" : ""}`}
+          onClick={() => setOutlineOpen((open) => !open)}
+          title="Outline"
+        >
+          <LuTableOfContents size={16} />
+        </button>
+        <button
+          type="button"
+          className={`mqpad-toolbar-btn ${findOpen ? "active" : ""}`}
+          onClick={() => setFindOpen((open) => !open)}
+          title="Find and replace (Cmd/Ctrl+F)"
+        >
+          <LuSearch size={16} />
+        </button>
+        <button
+          type="button"
           className={`mqpad-toolbar-btn ${consoleOpen ? "active" : ""}`}
           onClick={() => {
             setConsoleOpen((open) => !open);
@@ -418,6 +457,16 @@ export function EditorToolbar({ editor, serializer }: EditorToolbarProps) {
         </div>
       )}
 
+      {outlineOpen && (
+        <Outline
+          items={state.outline}
+          onNavigate={(pos: number) => {
+            editor.chain().focus(pos).scrollIntoView().run();
+          }}
+          onClose={() => setOutlineOpen(false)}
+        />
+      )}
+      {findOpen && <FindReplacePanel editor={editor} onClose={() => setFindOpen(false)} />}
       {consoleOpen && (
         <QueryConsole editor={editor} serializer={serializer} onClose={() => setConsoleOpen(false)} />
       )}

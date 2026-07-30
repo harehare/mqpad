@@ -40,6 +40,8 @@ It ships as both a standalone web app (storage in the browser's [OPFS](https://d
 - **Slash commands** — type `/` for a quick-insert menu: headings, bullet/numbered/task lists, tables, blockquote, code block, Mermaid diagram, math block, an `mq` query block, and a horizontal rule.
 - **Formatting toolbar** — bold, italic, underline, strikethrough, headings, lists, task lists, tables, blockquote, code block, links.
 - **Command palette** (`Cmd/Ctrl+K`) — new file/folder, mode toggles, theme switching, and more, fuzzy-searchable.
+- **Find and replace** (`Cmd/Ctrl+F`, or the toolbar's search icon) — highlights every match in the document, steps through them with next/previous, and replaces one or all; case-sensitive matching is a toggle in the bar.
+- **Outline** — the toolbar's table-of-contents icon opens a jump list of the document's headings in order; clicking one moves the cursor there and scrolls it into view.
 - **Markdown source mode** (`Cmd/Ctrl+Shift+M`) — toggle to the raw Markdown text and back without losing your place.
 - **Focus mode** (`Cmd/Ctrl+Shift+Enter`) — fades the sidebar and toolbar for distraction-free writing; hovering brings them back.
 - **Preview mode** — open any `.md` file directly via drag-and-drop onto the window, or the OS's "Open With" menu, with no notes folder/vault set up first.
@@ -104,6 +106,7 @@ Run tests/typecheck/lint across every package with `pnpm test` / `pnpm type-chec
 | Shortcut | Action |
 | --- | --- |
 | `Cmd/Ctrl+K` | Open the command palette |
+| `Cmd/Ctrl+F` | Open find and replace |
 | `Cmd/Ctrl+Shift+M` | Toggle Markdown source mode |
 | `Cmd/Ctrl+Shift+Enter` | Toggle focus mode |
 | `[[` | Start a WikiLink, with autocomplete |

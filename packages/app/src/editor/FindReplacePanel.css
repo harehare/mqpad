@@ -1,0 +1,83 @@
+.mqpad-find-replace {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--mqpad-surface-sunken);
+  border-top: 1px solid var(--mqpad-border);
+}
+
+.mqpad-find-replace-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mqpad-find-replace-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--mqpad-border);
+  border-radius: var(--mqpad-radius-sm);
+  background: var(--mqpad-surface);
+  color: var(--mqpad-text);
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.mqpad-find-replace-count {
+  flex-shrink: 0;
+  min-width: 40px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--mqpad-text-muted);
+}
+
+.mqpad-find-replace-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid var(--mqpad-border);
+  border-radius: var(--mqpad-radius-sm);
+  background: var(--mqpad-surface);
+  color: var(--mqpad-text);
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+}
+
+.mqpad-find-replace-icon-btn:hover:not(:disabled) {
+  background: var(--mqpad-accent-soft);
+}
+
+.mqpad-find-replace-icon-btn.active {
+  background: var(--mqpad-accent-soft);
+  color: var(--mqpad-accent);
+  border-color: var(--mqpad-accent);
+}
+
+.mqpad-find-replace-icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mqpad-find-replace-row button:not(.mqpad-find-replace-icon-btn) {
+  flex-shrink: 0;
+  border: 1px solid var(--mqpad-border);
+  border-radius: var(--mqpad-radius-sm);
+  background: var(--mqpad-surface);
+  color: var(--mqpad-text);
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mqpad-find-replace-row button:not(.mqpad-find-replace-icon-btn):hover:not(:disabled) {
+  background: var(--mqpad-accent-soft);
+}
+
+.mqpad-find-replace-row button:not(.mqpad-find-replace-icon-btn):disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
