@@ -1,7 +1,7 @@
 {
   "name": "mqpad",
   "private": true,
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A WYSIWYG Markdown editor with Obsidian-style links and live mq code blocks",
   "license": "MIT",
   "type": "module",

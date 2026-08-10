@@ -1,7 +1,7 @@
 {
   "name": "mqpad-web",
   "private": true,
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Standalone browser app for mqpad, backed by OPFS",
   "license": "MIT",
   "type": "module",
@@ -13,7 +13,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "mq-web": "^0.7.0",
+    "mq-web": "^0.8.2",
     "mqpad-app": "workspace:*",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
