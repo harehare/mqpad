@@ -3,7 +3,7 @@
   "displayName": "mqpad",
   "description": "A WYSIWYG Markdown editor with Obsidian-style links and live mq code blocks",
   "private": true,
-  "version": "0.1.5",
+  "version": "0.1.6",
   "license": "MIT",
   "type": "module",
   "publisher": "harehare",
@@ -101,7 +101,7 @@
   },
   "dependencies": {
     "ignore": "^7.0.5",
-    "mq-web": "^0.8.2",
+    "mq-web": "^0.8.3",
     "mqpad-app": "workspace:*",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"

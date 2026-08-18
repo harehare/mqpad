@@ -7,4 +7,4 @@ allowBuilds:
   sharp: true
   workerd: true
 minimumReleaseAgeExclude:
-  - mq-web@0.6.5 || 0.8.2
+  - mq-web@0.6.5 || 0.8.2 || 0.8.3
