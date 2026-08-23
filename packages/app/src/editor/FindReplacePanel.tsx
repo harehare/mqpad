@@ -8,11 +8,13 @@ import "./FindReplacePanel.css";
 export type FindReplacePanelProps = {
   editor: TiptapEditor;
   onClose: () => void;
+  /** Pre-fills the query and runs the search once on mount - set when opened from a vault-search result. */
+  initialQuery?: string;
 };
 
 /** Cmd/Ctrl+F find/replace bar for the WYSIWYG editor - matches are highlighted via FindAndReplace's decoration plugin, navigation moves the real selection so Enter/replace act on the current match. */
-export function FindReplacePanel({ editor, onClose }: FindReplacePanelProps) {
-  const [query, setQuery] = useState("");
+export function FindReplacePanel({ editor, onClose, initialQuery }: FindReplacePanelProps) {
+  const [query, setQuery] = useState(initialQuery ?? "");
   const [replacement, setReplacement] = useState("");
   const [caseSensitive, setCaseSensitive] = useState(false);
   const [matches, setMatches] = useState<FindMatch[]>([]);
@@ -22,6 +24,8 @@ export function FindReplacePanel({ editor, onClose }: FindReplacePanelProps) {
   useEffect(() => {
     inputRef.current?.focus();
     inputRef.current?.select();
+    if (initialQuery) runSearch(initialQuery, caseSensitive);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Clear decorations left behind when the panel closes.

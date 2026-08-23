@@ -94,6 +94,15 @@ export const SettingsDialog = ({
           </select>
         </div>
         <div className="mqpad-settings-field">
+          <label htmlFor="mqpad-daily-notes-folder">Daily Notes Folder</label>
+          <input
+            id="mqpad-daily-notes-folder"
+            type="text"
+            value={preferences.dailyNotesFolder}
+            onChange={(e) => onPreferencesChange({ dailyNotesFolder: e.target.value })}
+          />
+        </div>
+        <div className="mqpad-settings-field">
           <label htmlFor="mqpad-vault-root">{vaultRootLabel}</label>
           {vaultRootEditable ? (
             <input id="mqpad-vault-root" type="text" value={value} onChange={(e) => setValue(e.target.value)} />

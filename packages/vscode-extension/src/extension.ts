@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import * as vscode from "vscode";
-import { isFsRequestMessage } from "mqpad-app/src/fs/bridgeProtocol";
+import { isFsRequestMessage, isSaveAsMessage, type SaveAsMessage } from "mqpad-app/src/fs/bridgeProtocol";
 import { handleFsRequest } from "./fsHandler";
 
 function isOpenSettingsMessage(value: unknown): boolean {
@@ -38,6 +38,24 @@ async function openDroppedPaths(uris: unknown[]): Promise<void> {
     if (uri.scheme !== "file" || !/\.(md|markdown)$/i.test(uri.path)) continue;
     await vscode.commands.executeCommand("mqpad.openFile", uri);
   }
+}
+
+/**
+ * Handles a note export (Markdown/HTML/PDF, from EditorToolbar's Export
+ * menu): shows a native save dialog and writes the file, since arbitrary
+ * out-of-vault paths aren't reachable from the webview's own sandbox.
+ * Fire-and-forget from the webview's side - no response is sent back.
+ */
+async function handleSaveAs(message: SaveAsMessage): Promise<void> {
+  const target = await vscode.window.showSaveDialog({
+    defaultUri: vscode.Uri.file(message.filename),
+  });
+  if (!target) return;
+  const bytes =
+    message.encoding === "base64"
+      ? Buffer.from(message.content, "base64")
+      : Buffer.from(message.content, "utf8");
+  await vscode.workspace.fs.writeFile(target, bytes);
 }
 
 function getVaultUri(): vscode.Uri {
@@ -128,6 +146,10 @@ function openMqpadPanel(context: vscode.ExtensionContext): void {
     }
     if (isOpenExternalPathMessage(message)) {
       void openDroppedPaths(message.uris);
+      return;
+    }
+    if (isSaveAsMessage(message)) {
+      void handleSaveAs(message);
     }
   });
 
@@ -188,6 +210,10 @@ class MqpadPreviewEditorProvider implements vscode.CustomTextEditorProvider {
       }
       if (isOpenExternalPathMessage(message)) {
         void openDroppedPaths(message.uris);
+        return;
+      }
+      if (isSaveAsMessage(message)) {
+        void handleSaveAs(message);
       }
     });
 

@@ -22,7 +22,9 @@ import { dataToRows, parseFrontmatter, rowsToData, stringifyFrontmatter, type Fr
 import { MathBlock } from "./extensions/MathBlock";
 import { Image } from "./extensions/Image";
 import { MqCodeBlock } from "./extensions/MqCodeBlock";
-import { SlashCommand } from "./extensions/SlashCommand";
+import { SlashCommand, type SlashItem } from "./extensions/SlashCommand";
+import type { SavedQuery } from "../useSavedQueries";
+import { exportAsMarkdown, exportAsHtml, exportAsPdf } from "../export/exportNote";
 import { WikiLink, type WikiLinkOptions } from "./extensions/WikiLink";
 import "./editor.css";
 
@@ -64,6 +66,16 @@ export type EditorProps = {
   onStatsChange?: (stats: EditorStats) => void;
   /** Text direction for the writing surface (Settings > Text Direction). Defaults to "ltr". */
   direction?: "ltr" | "rtl";
+  /** Opens the find/replace bar pre-filled with this query on mount - set when opened by clicking a vault-search result. */
+  initialFindQuery?: string;
+  /** Extra `/` slash-menu items (templates, saved queries) merged in alongside the built-in ones. */
+  getSlashExtraItems?: () => SlashItem[];
+  savedQueries: SavedQuery[];
+  onAddSavedQuery: (name: string, query: string, scope: "document" | "vault") => void;
+  onRemoveSavedQuery: (id: string) => void;
+  /** Basename (no extension) of the open note, used as the default filename when exporting. */
+  noteTitle: string;
+  saveFileExternally: (filename: string, blob: Blob) => Promise<void>;
 };
 
 export function MqpadEditor({
@@ -74,6 +86,13 @@ export function MqpadEditor({
   ensureWikiLinkFileExists,
   onStatsChange,
   direction = "ltr",
+  initialFindQuery,
+  getSlashExtraItems,
+  savedQueries,
+  onAddSavedQuery,
+  onRemoveSavedQuery,
+  noteTitle,
+  saveFileExternally,
 }: EditorProps) {
   const serializer = useMemo(() => buildMarkdownSerializer(), []);
   const lastEmitted = useRef<string>(markdown);
@@ -116,7 +135,7 @@ export function MqpadEditor({
       MqCodeBlock.configure({
         serializeDocument: (ed: TiptapEditor) => serializeToMarkdown(serializer, ed.state.doc),
       }),
-      SlashCommand,
+      SlashCommand.configure({ getExtraItems: () => getSlashExtraItems?.() ?? [] }),
       Placeholder.configure({
         placeholder: "Start writing... type [[Note]] to link, ```mq for a live query block, or / for commands.",
       }),
@@ -191,10 +210,33 @@ export function MqpadEditor({
     editor.commands.focus("end");
   }, [editor]);
 
+  const handleExportMarkdown = () => saveFileExternally(`${noteTitle}.md`, exportAsMarkdown(markdown));
+  const handleExportHtml = () => {
+    if (!editor) return;
+    saveFileExternally(`${noteTitle}.html`, exportAsHtml(editor, noteTitle));
+  };
+  const handleExportPdf = async () => {
+    if (!editor) return;
+    const blob = await exportAsPdf(editor.view.dom as HTMLElement);
+    await saveFileExternally(`${noteTitle}.pdf`, blob);
+  };
+
   return (
     <>
       <FrontmatterPanel rows={frontmatterRows} onChange={handleFrontmatterRowsChange} />
-      {editor && <EditorToolbar editor={editor} serializer={serializer} />}
+      {editor && (
+        <EditorToolbar
+          editor={editor}
+          serializer={serializer}
+          initialFindQuery={initialFindQuery}
+          onExportMarkdown={handleExportMarkdown}
+          onExportHtml={handleExportHtml}
+          onExportPdf={handleExportPdf}
+          savedQueries={savedQueries}
+          onAddSavedQuery={onAddSavedQuery}
+          onRemoveSavedQuery={onRemoveSavedQuery}
+        />
+      )}
       <EditorContent editor={editor} />
     </>
   );

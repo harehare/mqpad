@@ -8,6 +8,7 @@ import {
   LuCode,
   LuColumns3,
   LuCopy,
+  LuDownload,
   LuHeading1,
   LuHeading2,
   LuHeading3,
@@ -42,24 +43,44 @@ import { FindReplacePanel } from "./FindReplacePanel";
 import { computeOutline } from "./computeOutline";
 import { Outline } from "./Outline";
 import { QueryConsole } from "./QueryConsole";
+import type { SavedQuery } from "../useSavedQueries";
 
 export type EditorToolbarProps = {
   editor: TiptapEditor;
   serializer: MarkdownSerializer;
+  /** Opens the find/replace bar pre-filled with this query on mount - set when the editor was opened by clicking a vault-search result. */
+  initialFindQuery?: string;
+  savedQueries?: SavedQuery[];
+  onAddSavedQuery?: (name: string, query: string, scope: "document" | "vault") => void;
+  onRemoveSavedQuery?: (id: string) => void;
+  onExportMarkdown?: () => void;
+  onExportHtml?: () => void;
+  onExportPdf?: () => void;
 };
 
 type SelectionRange = { from: number; to: number };
 
-export function EditorToolbar({ editor, serializer }: EditorToolbarProps) {
+export function EditorToolbar({
+  editor,
+  serializer,
+  initialFindQuery,
+  savedQueries = [],
+  onAddSavedQuery = () => {},
+  onRemoveSavedQuery = () => {},
+  onExportMarkdown,
+  onExportHtml,
+  onExportPdf,
+}: EditorToolbarProps) {
   const ai = useAi();
   const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
   const [linkValue, setLinkValue] = useState("");
   const [consoleOpen, setConsoleOpen] = useState(false);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [aiRange, setAiRange] = useState<SelectionRange | null>(null);
   const [aiOriginalText, setAiOriginalText] = useState("");
   const [copied, setCopied] = useState(false);
-  const [findOpen, setFindOpen] = useState(false);
+  const [findOpen, setFindOpen] = useState(() => Boolean(initialFindQuery));
   const [outlineOpen, setOutlineOpen] = useState(false);
 
   const state = useEditorState({
@@ -363,6 +384,14 @@ export function EditorToolbar({ editor, serializer }: EditorToolbarProps) {
         </button>
         <button
           type="button"
+          className={`mqpad-toolbar-btn ${exportMenuOpen ? "active" : ""}`}
+          onClick={() => setExportMenuOpen((open) => !open)}
+          title="Export this note"
+        >
+          <LuDownload size={16} />
+        </button>
+        <button
+          type="button"
           className={`mqpad-toolbar-btn ${aiOpen ? "active" : ""}`}
           disabled={!state.hasSelection || !ai.configured}
           onClick={() => (aiOpen ? setAiOpen(false) : openAiPopover())}
@@ -457,6 +486,41 @@ export function EditorToolbar({ editor, serializer }: EditorToolbarProps) {
         </div>
       )}
 
+      {exportMenuOpen && (
+        <div className="mqpad-toolbar-popover">
+          <button
+            type="button"
+            className="mqpad-export-menu-btn"
+            onClick={() => {
+              onExportMarkdown?.();
+              setExportMenuOpen(false);
+            }}
+          >
+            Markdown (.md)
+          </button>
+          <button
+            type="button"
+            className="mqpad-export-menu-btn"
+            onClick={() => {
+              onExportHtml?.();
+              setExportMenuOpen(false);
+            }}
+          >
+            HTML (.html)
+          </button>
+          <button
+            type="button"
+            className="mqpad-export-menu-btn"
+            onClick={() => {
+              onExportPdf?.();
+              setExportMenuOpen(false);
+            }}
+          >
+            PDF (.pdf)
+          </button>
+        </div>
+      )}
+
       {outlineOpen && (
         <Outline
           items={state.outline}
@@ -466,9 +530,18 @@ export function EditorToolbar({ editor, serializer }: EditorToolbarProps) {
           onClose={() => setOutlineOpen(false)}
         />
       )}
-      {findOpen && <FindReplacePanel editor={editor} onClose={() => setFindOpen(false)} />}
+      {findOpen && (
+        <FindReplacePanel editor={editor} onClose={() => setFindOpen(false)} initialQuery={initialFindQuery} />
+      )}
       {consoleOpen && (
-        <QueryConsole editor={editor} serializer={serializer} onClose={() => setConsoleOpen(false)} />
+        <QueryConsole
+          editor={editor}
+          serializer={serializer}
+          onClose={() => setConsoleOpen(false)}
+          savedQueries={savedQueries}
+          onAddSavedQuery={onAddSavedQuery}
+          onRemoveSavedQuery={onRemoveSavedQuery}
+        />
       )}
       {aiOpen && aiRange && (
         <AiSelectionPopover

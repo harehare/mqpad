@@ -8,6 +8,8 @@ export type Preferences = {
   font: FontChoice;
   pageWidth: PageWidth;
   direction: TextDirection;
+  /** Folder (vault-relative) that "Open Today's Note" creates/opens daily notes in. */
+  dailyNotesFolder: string;
 };
 
 const STORAGE_KEY = "mqpad-preferences";
@@ -16,6 +18,7 @@ const DEFAULT_PREFERENCES: Preferences = {
   font: "serif",
   pageWidth: "medium",
   direction: "ltr",
+  dailyNotesFolder: "Daily",
 };
 
 export const FONT_LABELS: Record<FontChoice, string> = {

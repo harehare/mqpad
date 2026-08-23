@@ -1,0 +1,91 @@
+.mqpad-graph-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+}
+
+.mqpad-graph-dialog {
+  background: var(--mqpad-surface-raised, #292724);
+  border-radius: var(--mqpad-radius);
+  box-shadow: var(--mqpad-shadow);
+  width: min(940px, calc(100vw - 32px));
+  height: min(700px, calc(100vh - 32px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mqpad-graph-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--mqpad-border);
+  flex-shrink: 0;
+}
+
+.mqpad-graph-header h2 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--mqpad-accent);
+}
+
+.mqpad-graph-close {
+  background: none;
+  border: none;
+  color: var(--mqpad-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: var(--mqpad-radius-sm);
+}
+
+.mqpad-graph-close:hover {
+  background: var(--mqpad-accent-soft);
+  color: var(--mqpad-text);
+}
+
+.mqpad-graph-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mqpad-text-muted);
+  font-size: 13px;
+}
+
+.mqpad-graph-svg {
+  flex: 1;
+  width: 100%;
+  touch-action: none;
+  cursor: grab;
+}
+
+.mqpad-graph-edge {
+  stroke: var(--mqpad-border);
+  stroke-width: 1;
+}
+
+.mqpad-graph-node circle {
+  fill: var(--mqpad-surface-sunken);
+  stroke: var(--mqpad-accent);
+  stroke-width: 1.5;
+  cursor: pointer;
+}
+
+.mqpad-graph-node.active circle {
+  fill: var(--mqpad-accent);
+}
+
+.mqpad-graph-node text {
+  fill: var(--mqpad-text);
+  font-size: 11px;
+  pointer-events: none;
+  user-select: none;
+}
