@@ -3,7 +3,7 @@
   "displayName": "mqpad",
   "description": "A WYSIWYG Markdown editor with Obsidian-style links and live mq code blocks",
   "private": true,
-  "version": "0.1.6",
+  "version": "0.2.0",
   "license": "MIT",
   "type": "module",
   "publisher": "harehare",
