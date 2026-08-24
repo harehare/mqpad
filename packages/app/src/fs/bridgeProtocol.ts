@@ -92,3 +92,20 @@ export function isFsChangeMessage(value: unknown): value is FsChangeMessage {
     (value as { source?: unknown }).source === "mqpad-file-changed"
   );
 }
+
+/**
+ * One-way webview -> host request to save a file outside the vault (note
+ * export). Fire-and-forget like `mqpad-open-settings`: the host shows a
+ * native save dialog and writes the file itself, with no response expected
+ * back.
+ */
+export type SaveAsMessage = {
+  source: "mqpad-save-as";
+  filename: string;
+  content: string;
+  encoding: "utf8" | "base64";
+};
+
+export function isSaveAsMessage(value: unknown): value is SaveAsMessage {
+  return typeof value === "object" && value !== null && (value as { source?: unknown }).source === "mqpad-save-as";
+}

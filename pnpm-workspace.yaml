@@ -2,6 +2,7 @@ packages:
   - "packages/*"
 allowBuilds:
   '@vscode/vsce-sign': true
+  core-js: true
   esbuild: true
   keytar: true
   sharp: true

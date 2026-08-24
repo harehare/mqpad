@@ -1,0 +1,65 @@
+.mqpad-templates-dialog {
+  width: 460px;
+}
+
+.mqpad-templates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.mqpad-templates-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--mqpad-radius-sm);
+  background: var(--mqpad-surface-sunken);
+}
+
+.mqpad-templates-item-name {
+  font-size: 13px;
+  color: var(--mqpad-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mqpad-templates-item-remove {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--mqpad-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: var(--mqpad-radius-sm);
+}
+
+.mqpad-templates-item-remove:hover {
+  background: var(--mqpad-accent-soft);
+  color: var(--mqpad-text);
+}
+
+.mqpad-templates-textarea {
+  background: var(--mqpad-surface-sunken, #181615);
+  border: 1px solid var(--mqpad-border);
+  border-radius: var(--mqpad-radius-sm);
+  color: var(--mqpad-text, #d4cfc4);
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: var(--mqpad-mono-font, monospace);
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.15s ease;
+}
+
+.mqpad-templates-textarea:focus {
+  border-color: var(--mqpad-accent);
+}

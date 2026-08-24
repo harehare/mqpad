@@ -18,6 +18,7 @@ import {
   VscPinned,
   VscTag,
 } from "react-icons/vsc";
+import { LuColumns2 } from "react-icons/lu";
 import "./FileTree.css";
 import { ContextMenu, ContextMenuItem } from "./ContextMenu";
 
@@ -25,6 +26,8 @@ type NodeType = "file" | "directory";
 type FileTreeProps = {
   files: FileNode[];
   onFileSelect: (path: string) => void;
+  /** Opens the file in a secondary pane alongside whatever is already open, without changing the primary selection. */
+  onOpenInSplit?: (path: string) => void;
   onRefresh: () => void;
   onCreateFile: (parentPath: string | undefined, fileName: string) => void;
   onCreateFolder: (parentPath: string | undefined, folderName: string) => void;
@@ -551,6 +554,7 @@ const applyPinnedOrder = (nodes: FileNode[], pinnedSet: Set<string>): FileNode[]
 export const FileTree = ({
   files,
   onFileSelect,
+  onOpenInSplit,
   onRefresh,
   onCreateFile,
   onCreateFolder,
@@ -614,6 +618,13 @@ export const FileTree = ({
 
     if (node.type === "file") {
       items.push({ label: "Open", icon: <VscFile size={16} />, onClick: () => onFileSelect(node.path) });
+      if (onOpenInSplit) {
+        items.push({
+          label: "Open in Split",
+          icon: <LuColumns2 size={16} />,
+          onClick: () => onOpenInSplit(node.path),
+        });
+      }
       const isPinned = pinnedSet.has(node.path);
       items.push({
         label: isPinned ? "Unpin" : "Pin",

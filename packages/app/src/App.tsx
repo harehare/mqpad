@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { VscGear } from "react-icons/vsc";
-import { LuCode, LuFocus, LuPanelLeft } from "react-icons/lu";
+import { VscGear, VscFiles, VscSearch } from "react-icons/vsc";
+import { LuCode, LuFocus, LuPanelLeft, LuNetwork, LuX } from "react-icons/lu";
 import type { FileSystem, FileNode } from "./fs/types";
 import { MqRunnerProvider, type MqRunner } from "./mq/MqRunnerContext";
 import { VaultIndexProvider, type VaultFile } from "./mq/VaultIndexContext";
@@ -8,6 +8,15 @@ import { AiProvider } from "./ai/AiContext";
 import { MqpadEditor, type EditorStats } from "./editor/Editor";
 import { SourceView } from "./editor/SourceView";
 import { FileTree } from "./components/FileTree";
+import { SearchPanel } from "./components/SearchPanel";
+import { GraphView } from "./components/GraphView";
+import { computeGraph } from "./graph/computeGraph";
+import { TemplatesDialog } from "./components/TemplatesDialog";
+import { TemplatePicker } from "./components/TemplatePicker";
+import { useTemplates } from "./useTemplates";
+import { useSavedQueries } from "./useSavedQueries";
+import { getDailyNotePath } from "./dailyNotes";
+import { downloadBlob } from "./export/exportNote";
 import { Logo } from "./components/Logo";
 import { TabBar, type Tab } from "./components/TabBar";
 import { SettingsDialog } from "./components/SettingsDialog";
@@ -21,9 +30,11 @@ import { THEME_LABELS, type ThemeName } from "./theme/themes";
 import { useTheme } from "./theme/useTheme";
 import { usePreferences } from "./theme/usePreferences";
 import { usePinnedNotes } from "./usePinnedNotes";
+import { useRecentFiles } from "./useRecentFiles";
 import { useFirstRun } from "./useFirstRun";
 import { flattenMarkdownPaths, useNoteIndex } from "./useNoteIndex";
 import { exportVaultZip, importVaultZip } from "./vault/vaultArchive";
+import type { SlashItem } from "./editor/extensions/SlashCommand";
 import "./theme.css";
 import "./App.css";
 
@@ -65,6 +76,14 @@ export type AppProps = {
    * button, or the command palette).
    */
   defaultSidebarVisible?: boolean;
+  /**
+   * Saves an exported file (Markdown/HTML/PDF, not a vault note) somewhere
+   * outside the vault. Defaults to a browser download (Blob + `<a
+   * download>`); the VS Code extension overrides this to show a native save
+   * dialog via the extension host, since arbitrary-path file writes aren't
+   * available to the webview itself.
+   */
+  saveFileExternally?: (filename: string, blob: Blob) => Promise<void>;
 };
 
 type OpenFile = {
@@ -84,6 +103,34 @@ function basenameWithoutExt(path: string): string {
 
 const AUTOSAVE_DEBOUNCE_MS = 400;
 
+type ViewState = { scrollTop: number };
+
+/**
+ * Restores an editor pane's scroll position when switching back to a
+ * previously-viewed note, keyed by path within the current session (not
+ * persisted across reloads, since content can change between sessions).
+ */
+function useScrollRestore(
+  path: string | null,
+  viewStateByPath: React.RefObject<Record<string, ViewState>>,
+): React.RefObject<HTMLDivElement | null> {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const prevPath = useRef<string | null>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container && prevPath.current) {
+      viewStateByPath.current[prevPath.current] = { scrollTop: container.scrollTop };
+    }
+    if (container) {
+      container.scrollTop = path ? (viewStateByPath.current[path]?.scrollTop ?? 0) : 0;
+    }
+    prevPath.current = path;
+  }, [path, viewStateByPath]);
+
+  return containerRef;
+}
+
 export function App({
   fs,
   mqRunner,
@@ -95,6 +142,7 @@ export function App({
   onActivePathChange,
   quickOpenHotkeyEnabled = true,
   defaultSidebarVisible,
+  saveFileExternally = async (filename, blob) => downloadBlob(filename, blob),
 }: AppProps) {
   const [files, setFiles] = useState<FileNode[]>([]);
   const [openFiles, setOpenFiles] = useState<Record<string, OpenFile>>({});
@@ -104,7 +152,14 @@ export function App({
   const [theme, setTheme] = useTheme();
   const [preferences, setPreferences] = usePreferences();
   const [pinnedPaths, togglePin] = usePinnedNotes();
-  const { metaByPath, contentByPath, backlinksByPath, refreshPath: refreshNoteIndexPath } = useNoteIndex(fs, files);
+  const [recentPaths, recordRecentOpen] = useRecentFiles();
+  const {
+    metaByPath,
+    contentByPath,
+    backlinksByPath,
+    linksByPath,
+    refreshPath: refreshNoteIndexPath,
+  } = useNoteIndex(fs, files);
   const vaultFiles = useMemo<VaultFile[]>(
     () =>
       Object.entries(contentByPath).map(([path, content]) => ({
@@ -123,6 +178,21 @@ export function App({
   );
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [quickOpenOpen, setQuickOpenOpen] = useState(false);
+  const [sidebarMode, setSidebarMode] = useState<"files" | "search">("files");
+  const [graphOpen, setGraphOpen] = useState(false);
+  const [searchNavigation, setSearchNavigation] = useState<{ path: string; query: string } | null>(null);
+  const [secondaryPath, setSecondaryPath] = useState<string | null>(null);
+  const viewStateByPath = useRef<Record<string, ViewState>>({});
+  const primaryScrollRef = useScrollRestore(activePath, viewStateByPath);
+  const secondaryScrollRef = useScrollRestore(secondaryPath, viewStateByPath);
+  const [templatesDialogOpen, setTemplatesDialogOpen] = useState(false);
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
+  const { templates, addTemplate, removeTemplate } = useTemplates();
+  const templatesRef = useRef(templates);
+  templatesRef.current = templates;
+  const { savedQueries, addSavedQuery, removeSavedQuery } = useSavedQueries();
+  const savedQueriesRef = useRef(savedQueries);
+  savedQueriesRef.current = savedQueries;
   const [welcomeSeen, markWelcomeSeen] = useFirstRun();
   const [welcomeOpen, setWelcomeOpen] = useState(!welcomeSeen);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -183,7 +253,7 @@ export function App({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fs]);
 
-  const openFile = useCallback(
+  const ensureFileOpen = useCallback(
     async (path: string) => {
       if (!openFiles[path]) {
         const content = await fs.readFile(path).catch(() => "");
@@ -193,10 +263,48 @@ export function App({
           watchers.current[path] = fs.watch(path, () => handleExternalChange(path));
         }
       }
-      setActivePath(path);
     },
     [fs, openFiles, handleExternalChange],
   );
+
+  const openFile = useCallback(
+    async (path: string) => {
+      await ensureFileOpen(path);
+      setActivePath(path);
+      recordRecentOpen(path);
+    },
+    [ensureFileOpen, recordRecentOpen],
+  );
+
+  const handleSearchNavigate = useCallback(
+    (path: string, query: string) => {
+      setSearchNavigation({ path, query });
+      openFile(path);
+      if (isMobileViewport()) setSidebarVisible(false);
+    },
+    [openFile],
+  );
+
+  // Clears the pending vault-search query once the editor for its target
+  // path has mounted (MqpadEditor only reads `initialFindQuery` at mount, via
+  // key={activePath}), so revisiting the same file later doesn't reopen the
+  // find bar.
+  useEffect(() => {
+    setSearchNavigation((prev) => (prev && prev.path === activePath ? null : prev));
+  }, [activePath]);
+
+  const openInSplit = useCallback(
+    async (path: string) => {
+      await ensureFileOpen(path);
+      setSecondaryPath(path);
+    },
+    [ensureFileOpen],
+  );
+
+  const closeSplit = useCallback(() => setSecondaryPath(null), []);
+
+  const graphPaths = useMemo(() => flattenMarkdownPaths(files), [files]);
+  const graphData = useMemo(() => computeGraph(graphPaths, linksByPath), [graphPaths, linksByPath]);
 
   // Re-runs whenever the host changes `initialPath` (e.g. the web app
   // reacting to a browser back/forward navigation), not just on mount. Waits
@@ -241,6 +349,7 @@ export function App({
         const remaining = tabOrder.filter((p) => p !== path);
         return remaining[remaining.length - 1] ?? null;
       });
+      setSecondaryPath((current) => (current === path ? null : current));
     },
     [tabOrder],
   );
@@ -261,21 +370,15 @@ export function App({
     [fs, refreshNoteIndexPath],
   );
 
-  const handleEditorChange = useCallback(
-    (markdown: string) => {
-      if (!activePath) return;
+  const handleEditorChangeForPath = useCallback(
+    (path: string, markdown: string) => {
       setOpenFiles((prev) => ({
         ...prev,
-        [activePath]: { content: markdown, savedContent: prev[activePath]?.savedContent ?? "" },
+        [path]: { content: markdown, savedContent: prev[path]?.savedContent ?? "" },
       }));
-      scheduleSave(activePath, markdown);
+      scheduleSave(path, markdown);
     },
-    [activePath, scheduleSave],
-  );
-
-  const resolveWikiLinkTarget = useCallback(
-    (title: string) => `${activePath ? dirname(activePath) : ""}/${title}.md`,
-    [activePath],
+    [scheduleSave],
   );
 
   const ensureWikiLinkFileExists = useCallback(
@@ -290,10 +393,10 @@ export function App({
   );
 
   const handleCreateFile = useCallback(
-    (parentPath: string | undefined, fileName: string) => {
+    (parentPath: string | undefined, fileName: string, initialContent = "") => {
       const name = fileName.includes(".") ? fileName : `${fileName}.md`;
       const path = `${parentPath ?? ""}/${name}`;
-      fs.writeFile(path, "").then(refreshFiles).then(() => openFile(path));
+      fs.writeFile(path, initialContent).then(refreshFiles).then(() => openFile(path));
     },
     [fs, refreshFiles, openFile],
   );
@@ -304,6 +407,51 @@ export function App({
     },
     [fs, refreshFiles],
   );
+
+  const handleSelectTemplate = useCallback(
+    (template: { name: string; content: string }) => {
+      handleCreateFile(activePath ? dirname(activePath) : undefined, "Untitled.md", template.content);
+    },
+    [activePath, handleCreateFile],
+  );
+
+  const handleOpenDailyNote = useCallback(async () => {
+    const path = getDailyNotePath(preferences.dailyNotesFolder);
+    const exists = await fs.fileExists(path);
+    if (!exists) {
+      const dailyTemplate = templatesRef.current.find((t) => t.name.toLowerCase() === "daily");
+      const content = dailyTemplate?.content ?? `# ${path.slice(path.lastIndexOf("/") + 1).replace(/\.md$/, "")}\n\n`;
+      await fs.createDirectory(dirname(path)).catch(() => {});
+      await fs.writeFile(path, content);
+      await refreshFiles();
+    }
+    openFile(path);
+  }, [fs, preferences.dailyNotesFolder, refreshFiles, openFile]);
+
+  // getExtraItems is called fresh on every `/` keystroke (see SlashCommand.ts),
+  // so it's fine for this callback identity to change across renders - it
+  // just needs to read the latest templates via the ref rather than closing
+  // over a stale `templates` array from whichever render created the (memoized
+  // once per editor mount) SlashCommand extension instance.
+  const getSlashExtraItems = useCallback((): SlashItem[] => {
+    const templateItems: SlashItem[] = templatesRef.current.map((t) => ({
+      id: `template-${t.id}`,
+      label: `Template: ${t.name}`,
+      run: (editor, range) => editor.chain().focus().deleteRange(range).insertContent(t.content).run(),
+    }));
+    const savedQueryItems: SlashItem[] = savedQueriesRef.current.map((q) => ({
+      id: `saved-query-${q.id}`,
+      label: `Saved Query: ${q.name}`,
+      run: (editor, range) =>
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .insertContent({ type: "mqCodeBlock", attrs: { query: q.query, result: "", scope: q.scope } })
+          .run(),
+    }));
+    return [...templateItems, ...savedQueryItems];
+  }, []);
 
   const handleExportVault = useCallback(async () => {
     const zipData = await exportVaultZip(fs);
@@ -393,10 +541,49 @@ export function App({
     isDirty: openFiles[path]?.content !== openFiles[path]?.savedContent,
   }));
 
-  const activeContent = activePath ? openFiles[activePath]?.content ?? "" : "";
   const activeIsDirty = activePath ? openFiles[activePath]?.content !== openFiles[activePath]?.savedContent : false;
   const activeConflict = activePath ? conflicts[activePath] : undefined;
   const activeBacklinks = activePath ? (backlinksByPath[activePath] ?? []).filter((path) => path !== activePath) : [];
+
+  const renderEditorPane = (path: string | null, isPrimary: boolean) => {
+    if (!path) {
+      return (
+        <div className="mqpad-empty-state">
+          <Logo size={36} />
+          <p>Select or create a file to start editing.</p>
+        </div>
+      );
+    }
+    const content = openFiles[path]?.content ?? "";
+    if (sourceMode) {
+      return (
+        <SourceView
+          markdown={content}
+          onChange={(md) => handleEditorChangeForPath(path, md)}
+          direction={preferences.direction}
+        />
+      );
+    }
+    return (
+      <MqpadEditor
+        key={path}
+        markdown={content}
+        onChange={(md) => handleEditorChangeForPath(path, md)}
+        onNavigate={openFile}
+        resolveWikiLinkTarget={(title) => `${dirname(path)}/${title}.md`}
+        ensureWikiLinkFileExists={ensureWikiLinkFileExists}
+        onStatsChange={isPrimary ? setStats : undefined}
+        direction={preferences.direction}
+        initialFindQuery={searchNavigation && searchNavigation.path === path ? searchNavigation.query : undefined}
+        getSlashExtraItems={getSlashExtraItems}
+        savedQueries={savedQueries}
+        onAddSavedQuery={addSavedQuery}
+        onRemoveSavedQuery={removeSavedQuery}
+        noteTitle={basenameWithoutExt(path)}
+        saveFileExternally={saveFileExternally}
+      />
+    );
+  };
 
   // The editor remounts (key={activePath}) on file switch, so drop the
   // previous file's stats rather than showing them briefly against the new one.
@@ -419,6 +606,10 @@ export function App({
       } else if (isShortcut(e, "b")) {
         e.preventDefault();
         setSidebarVisible((v) => !v);
+      } else if (isShortcut(e, "f", true)) {
+        e.preventDefault();
+        setSidebarMode("search");
+        setSidebarVisible(true);
       } else if (isShortcut(e, "k")) {
         e.preventDefault();
         setPaletteOpen((v) => !v);
@@ -478,6 +669,20 @@ export function App({
       hint: "Cmd+B",
       onRun: () => setSidebarVisible((v) => !v),
     },
+    {
+      id: "search-all-notes",
+      label: "Search in All Notes",
+      hint: "Cmd+Shift+F",
+      onRun: () => {
+        setSidebarMode("search");
+        setSidebarVisible(true);
+      },
+    },
+    { id: "open-graph-view", label: "Open Graph View", onRun: () => setGraphOpen(true) },
+    ...(secondaryPath ? [{ id: "close-split", label: "Close Split", onRun: closeSplit }] : []),
+    { id: "new-file-from-template", label: "New File from Template...", onRun: () => setTemplatePickerOpen(true) },
+    { id: "manage-templates", label: "Manage Templates", onRun: () => setTemplatesDialogOpen(true) },
+    { id: "open-daily-note", label: "Open Today's Note", onRun: () => void handleOpenDailyNote() },
     { id: "open-settings", label: "Open Settings", onRun: () => setSettingsOpen(true) },
     { id: "show-welcome", label: "Show Welcome Tutorial", onRun: () => setWelcomeOpen(true) },
     ...Object.entries(THEME_LABELS).map(([name, label]) => ({
@@ -519,6 +724,13 @@ export function App({
                 >
                   <LuFocus size={16} />
                 </button>
+                <button
+                  className="mqpad-titlebar-settings"
+                  onClick={() => setGraphOpen(true)}
+                  title="Open Graph View"
+                >
+                  <LuNetwork size={16} />
+                </button>
                 <button className="mqpad-titlebar-settings" onClick={() => setSettingsOpen(true)} title="Settings">
                   <VscGear size={16} />
                 </button>
@@ -529,24 +741,47 @@ export function App({
                 <div className="mqpad-sidebar-backdrop" onClick={() => setSidebarVisible(false)} />
               )}
               <div className={`mqpad-sidebar ${sidebarVisible ? "" : "mqpad-sidebar-hidden"}`}>
-                <FileTree
-                  files={files}
-                  onFileSelect={(path) => {
-                    openFile(path);
-                    if (isMobileViewport()) setSidebarVisible(false);
-                  }}
-                  onRefresh={refreshFiles}
-                  onCreateFile={handleCreateFile}
-                  onCreateFolder={handleCreateFolder}
-                  onDeleteFile={handleDeleteFile}
-                  onRenameFile={handleRenameFile}
-                  onMoveFile={handleMoveFile}
-                  selectedFile={activePath}
-                  pinnedPaths={pinnedPaths}
-                  onTogglePin={togglePin}
-                  metaByPath={metaByPath}
-                  contentByPath={contentByPath}
-                />
+                <div className="mqpad-sidebar-tabs">
+                  <button
+                    type="button"
+                    className={`mqpad-sidebar-tab ${sidebarMode === "files" ? "active" : ""}`}
+                    onClick={() => setSidebarMode("files")}
+                  >
+                    <VscFiles size={13} /> Files
+                  </button>
+                  <button
+                    type="button"
+                    className={`mqpad-sidebar-tab ${sidebarMode === "search" ? "active" : ""}`}
+                    onClick={() => setSidebarMode("search")}
+                  >
+                    <VscSearch size={13} /> Search
+                  </button>
+                </div>
+                <div className="mqpad-sidebar-panel">
+                  {sidebarMode === "files" ? (
+                    <FileTree
+                      files={files}
+                      onFileSelect={(path) => {
+                        openFile(path);
+                        if (isMobileViewport()) setSidebarVisible(false);
+                      }}
+                      onOpenInSplit={openInSplit}
+                      onRefresh={refreshFiles}
+                      onCreateFile={handleCreateFile}
+                      onCreateFolder={handleCreateFolder}
+                      onDeleteFile={handleDeleteFile}
+                      onRenameFile={handleRenameFile}
+                      onMoveFile={handleMoveFile}
+                      selectedFile={activePath}
+                      pinnedPaths={pinnedPaths}
+                      onTogglePin={togglePin}
+                      metaByPath={metaByPath}
+                      contentByPath={contentByPath}
+                    />
+                  ) : (
+                    <SearchPanel contentByPath={contentByPath} onNavigate={handleSearchNavigate} />
+                  )}
+                </div>
               </div>
               <div className="mqpad-main">
                 <TabBar tabs={tabs} activeTabId={activePath} onTabClick={openFile} onTabClose={closeTab} />
@@ -565,30 +800,21 @@ export function App({
                     onDismiss={() => setReloadedPath(null)}
                   />
                 )}
-                <div className="mqpad-editor-area">
-                  {activePath ? (
-                    sourceMode ? (
-                      <SourceView
-                        markdown={activeContent}
-                        onChange={handleEditorChange}
-                        direction={preferences.direction}
-                      />
-                    ) : (
-                      <MqpadEditor
-                        key={activePath}
-                        markdown={activeContent}
-                        onChange={handleEditorChange}
-                        onNavigate={openFile}
-                        resolveWikiLinkTarget={resolveWikiLinkTarget}
-                        ensureWikiLinkFileExists={ensureWikiLinkFileExists}
-                        onStatsChange={setStats}
-                        direction={preferences.direction}
-                      />
-                    )
-                  ) : (
-                    <div className="mqpad-empty-state">
-                      <Logo size={36} />
-                      <p>Select or create a file to start editing.</p>
+                <div className={`mqpad-panes ${secondaryPath ? "mqpad-panes-split" : ""}`}>
+                  <div className="mqpad-editor-area" ref={primaryScrollRef}>
+                    {renderEditorPane(activePath, true)}
+                  </div>
+                  {secondaryPath && (
+                    <div className="mqpad-editor-pane-secondary">
+                      <div className="mqpad-editor-pane-secondary-header">
+                        <span>{basenameWithoutExt(secondaryPath)}</span>
+                        <button type="button" onClick={closeSplit} title="Close split" aria-label="Close split">
+                          <LuX size={14} />
+                        </button>
+                      </div>
+                      <div className="mqpad-editor-area" ref={secondaryScrollRef}>
+                        {renderEditorPane(secondaryPath, false)}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -618,7 +844,30 @@ export function App({
           )}
           {paletteOpen && <CommandPalette commands={commands} onClose={() => setPaletteOpen(false)} />}
           {quickOpenOpen && (
-            <QuickOpen paths={flattenMarkdownPaths(files)} onSelect={openFile} onClose={() => setQuickOpenOpen(false)} />
+            <QuickOpen
+              paths={flattenMarkdownPaths(files)}
+              recentPaths={recentPaths}
+              onSelect={openFile}
+              onClose={() => setQuickOpenOpen(false)}
+            />
+          )}
+          {graphOpen && (
+            <GraphView graph={graphData} activePath={activePath} onNavigate={openFile} onClose={() => setGraphOpen(false)} />
+          )}
+          {templatesDialogOpen && (
+            <TemplatesDialog
+              templates={templates}
+              onAdd={addTemplate}
+              onRemove={removeTemplate}
+              onClose={() => setTemplatesDialogOpen(false)}
+            />
+          )}
+          {templatePickerOpen && (
+            <TemplatePicker
+              templates={templates}
+              onSelect={handleSelectTemplate}
+              onClose={() => setTemplatePickerOpen(false)}
+            />
           )}
           {welcomeOpen && (
             <WelcomeDialog

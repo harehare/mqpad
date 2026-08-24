@@ -196,15 +196,35 @@ function renderMenu() {
   };
 }
 
-/** Typing `/` opens a filterable menu to insert headings, lists, code/mermaid/math/mq blocks, etc. */
-export const SlashCommand = Extension.create({
+export type SlashCommandOptions = {
+  /**
+   * Extra items (templates, saved queries) merged in alongside the static
+   * ITEMS list. Called on every keystroke rather than baked in at extension
+   * creation, since the extension instance is built once per editor mount
+   * (see Editor.tsx's `useMemo(..., [])`) while templates/saved queries can
+   * change during that editor's lifetime.
+   */
+  getExtraItems: () => SlashItem[];
+};
+
+/** Typing `/` opens a filterable menu to insert headings, lists, code/mermaid/math/mq blocks, templates, saved queries, etc. */
+export const SlashCommand = Extension.create<SlashCommandOptions>({
   name: "slashCommand",
+
+  addOptions() {
+    return {
+      getExtraItems: () => [],
+    };
+  },
 
   addProseMirrorPlugins() {
     const options: Omit<SuggestionOptions<SlashItem, SlashItem>, "editor"> = {
       char: "/",
       startOfLine: false,
-      items: ({ query }) => ITEMS.filter((item) => item.label.toLowerCase().includes(query.toLowerCase())),
+      items: ({ query }) => {
+        const all = [...ITEMS, ...this.options.getExtraItems()];
+        return all.filter((item) => item.label.toLowerCase().includes(query.toLowerCase()));
+      },
       command: ({ editor, range, props }) => props.run(editor, range),
       render: renderMenu,
     };

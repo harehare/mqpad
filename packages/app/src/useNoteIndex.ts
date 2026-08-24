@@ -111,5 +111,11 @@ export function useNoteIndex(fs: FileSystem, files: FileNode[]) {
     return reverse;
   }, [indexByPath]);
 
-  return { metaByPath, contentByPath, backlinksByPath, refreshPath };
+  /** For each note, the absolute paths its `[[WikiLink]]`s resolve to (the reverse of backlinksByPath). */
+  const linksByPath = useMemo(
+    () => Object.fromEntries(Object.entries(indexByPath).map(([path, entry]) => [path, entry.links])),
+    [indexByPath],
+  );
+
+  return { metaByPath, contentByPath, backlinksByPath, linksByPath, refreshPath };
 }

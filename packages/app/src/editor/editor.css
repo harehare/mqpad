@@ -88,6 +88,20 @@
   border-color: var(--mqpad-accent);
 }
 
+.mqpad-export-menu-btn {
+  background: transparent;
+  border: 1px solid var(--mqpad-border);
+  border-radius: var(--mqpad-radius-sm);
+  color: var(--mqpad-text);
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.mqpad-export-menu-btn:hover {
+  background: var(--mqpad-accent-soft);
+}
+
 .mqpad-toolbar-popover-apply {
   background: var(--mqpad-accent);
   color: var(--mqpad-accent-contrast);
@@ -190,6 +204,112 @@
 .mqpad-query-console-error {
   color: var(--mqpad-error);
   font-size: 12px;
+}
+
+.mqpad-query-console-saved-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.mqpad-query-console-saved-select {
+  flex: 1;
+  min-width: 0;
+  background: var(--mqpad-surface-sunken);
+  border: 1px solid var(--mqpad-border);
+  border-radius: var(--mqpad-radius-sm);
+  color: var(--mqpad-text);
+  font-size: 12px;
+  padding: 5px 8px;
+  outline: none;
+}
+
+.mqpad-query-console-saved-row button {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--mqpad-border);
+  border-radius: var(--mqpad-radius-sm);
+  color: var(--mqpad-text);
+  font-size: 12px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.mqpad-query-console-saved-row button:hover:not(:disabled) {
+  background: var(--mqpad-accent-soft);
+}
+
+.mqpad-query-console-saved-row button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.mqpad-query-console-save-name {
+  flex: 1;
+  min-width: 0;
+  background: var(--mqpad-surface-sunken);
+  border: 1px solid var(--mqpad-border);
+  border-radius: var(--mqpad-radius-sm);
+  color: var(--mqpad-text);
+  font-size: 12px;
+  padding: 5px 8px;
+  outline: none;
+}
+
+.mqpad-query-console-saved-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.mqpad-query-console-saved-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--mqpad-surface-sunken);
+  border-radius: var(--mqpad-radius-sm);
+  padding: 3px 4px 3px 8px;
+  font-size: 11px;
+  color: var(--mqpad-text-muted);
+}
+
+.mqpad-query-console-saved-item button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--mqpad-text-muted);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: var(--mqpad-radius-sm);
+}
+
+.mqpad-query-console-saved-item button:hover {
+  background: var(--mqpad-accent-soft);
+  color: var(--mqpad-text);
+}
+
+.mqpad-query-console-export-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.mqpad-query-console-export-row button {
+  background: transparent;
+  border: 1px solid var(--mqpad-border);
+  border-radius: var(--mqpad-radius-sm);
+  color: var(--mqpad-text);
+  font-size: 12px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.mqpad-query-console-export-row button:hover {
+  background: var(--mqpad-accent-soft);
 }
 
 .mqpad-editor-area .tiptap p.is-editor-empty:first-child::before {

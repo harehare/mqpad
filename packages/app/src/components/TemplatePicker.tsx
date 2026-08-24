@@ -1,27 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fuzzyScore } from "../fuzzyMatch";
+import type { Template } from "../useTemplates";
 import "./CommandPalette.css";
 
-type QuickOpenProps = {
-  paths: string[];
-  /** Most-recently-opened paths, most recent first - shown first when the query is empty. */
-  recentPaths?: string[];
-  onSelect: (path: string) => void;
+type TemplatePickerProps = {
+  templates: Template[];
+  onSelect: (template: Template) => void;
   onClose: () => void;
 };
 
-const MAX_RESULTS = 50;
-
-function basename(path: string): string {
-  return path.slice(path.lastIndexOf("/") + 1);
-}
-
-function dirname(path: string): string {
-  const idx = path.lastIndexOf("/");
-  return idx <= 0 ? "/" : path.slice(0, idx);
-}
-
-export function QuickOpen({ paths, recentPaths = [], onSelect, onClose }: QuickOpenProps) {
+/** Command-palette-styled picker for "New File from Template...", fuzzy-filtered by template name. */
+export function TemplatePicker({ templates, onSelect, onClose }: TemplatePickerProps) {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -31,28 +20,22 @@ export function QuickOpen({ paths, recentPaths = [], onSelect, onClose }: QuickO
   }, []);
 
   const filtered = useMemo(() => {
-    if (!query.trim()) {
-      const known = new Set(paths);
-      const recentFirst = recentPaths.filter((p) => known.has(p));
-      const rest = paths.filter((p) => !recentFirst.includes(p));
-      return [...recentFirst, ...rest].slice(0, MAX_RESULTS);
-    }
-    return paths
-      .map((path) => ({ path, score: fuzzyScore(query, path) }))
-      .filter((entry): entry is { path: string; score: number } => entry.score !== null)
+    if (!query.trim()) return templates;
+    return templates
+      .map((t) => ({ t, score: fuzzyScore(query, t.name) }))
+      .filter((entry): entry is { t: Template; score: number } => entry.score !== null)
       .sort((a, b) => b.score - a.score)
-      .slice(0, MAX_RESULTS)
-      .map((entry) => entry.path);
-  }, [paths, query]);
+      .map((entry) => entry.t);
+  }, [templates, query]);
 
   useEffect(() => {
     setActiveIndex(0);
   }, [query]);
 
-  const run = (path: string | undefined) => {
-    if (!path) return;
+  const run = (template: Template | undefined) => {
+    if (!template) return;
     onClose();
-    onSelect(path);
+    onSelect(template);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -80,22 +63,21 @@ export function QuickOpen({ paths, recentPaths = [], onSelect, onClose }: QuickO
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Go to file..."
+          placeholder="New file from template..."
         />
         <div className="mqpad-palette-list">
           {filtered.length === 0 ? (
-            <div className="mqpad-palette-empty">No matching files</div>
+            <div className="mqpad-palette-empty">No templates yet — add one from "Manage Templates".</div>
           ) : (
-            filtered.map((path, index) => (
+            filtered.map((t, index) => (
               <button
                 type="button"
-                key={path}
+                key={t.id}
                 className={`mqpad-palette-item ${index === activeIndex ? "active" : ""}`}
                 onMouseEnter={() => setActiveIndex(index)}
-                onClick={() => run(path)}
+                onClick={() => run(t)}
               >
-                <span className="mqpad-palette-item-label">{basename(path)}</span>
-                <span className="mqpad-palette-item-hint">{dirname(path)}</span>
+                <span className="mqpad-palette-item-label">{t.name}</span>
               </button>
             ))
           )}

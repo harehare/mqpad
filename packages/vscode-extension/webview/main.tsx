@@ -6,6 +6,31 @@ import { createRoot } from "react-dom/client";
 const vscodeApi = acquireVsCodeApi();
 const fs = new BridgeFileSystem(vscodeApi);
 
+/**
+ * Chunked to avoid blowing the call stack on `String.fromCharCode(...bytes)`
+ * for a multi-MB PDF - btoa itself only accepts a binary string, not bytes.
+ */
+async function blobToBase64(blob: Blob): Promise<string> {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  const chunkSize = 0x8000;
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
+/**
+ * Note export (Markdown/HTML/PDF): the webview has no filesystem access
+ * outside the vault, so the extension host shows a native save dialog and
+ * writes the file (see `handleSaveAs` in extension.ts). Fire-and-forget,
+ * matching `mqpad-open-settings`.
+ */
+async function saveFileExternally(filename: string, blob: Blob): Promise<void> {
+  const content = await blobToBase64(blob);
+  vscodeApi.postMessage({ source: "mqpad-save-as", filename, content, encoding: "base64" });
+}
+
 const mqRunner = serializeMqRunner((query, content) => run(query, content, { inputFormat: "markdown" }));
 
 function openVaultPathSettings(): void {
@@ -65,6 +90,7 @@ createRoot(rootEl).render(
       initialPath={initialPath}
       quickOpenHotkeyEnabled={false}
       defaultSidebarVisible={showFileTree}
+      saveFileExternally={saveFileExternally}
     />
   </StrictMode>,
 );
