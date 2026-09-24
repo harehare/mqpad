@@ -10,7 +10,9 @@ import { useMqRunner } from "../../mq/MqRunnerContext";
 import { useVaultIndex } from "../../mq/VaultIndexContext";
 import { runVaultQuery } from "../../mq/runVaultQuery";
 import { buildMarkdownParser } from "../markdown";
-import type { MqCodeBlockOptions } from "./MqCodeBlock";
+import type { MqCodeBlockOptions, MqCodeBlockStorage } from "./MqCodeBlock";
+
+const MAX_AUTO_RERUNS = 20;
 
 /** Strips a stray ```mq fence or surrounding whitespace an AI-generated query sometimes wraps its answer in, despite being asked not to. */
 function cleanGeneratedQuery(text: string): string {
@@ -88,10 +90,7 @@ export function MqCodeBlockView({ node, updateAttributes, editor, extension }: N
     resultRef.current = result;
   }, [result]);
 
-  // Set right before `run` writes its own result back, so the live-update
-  // effect can recognize and skip the single change that causes - rather
-  // than treating its own write as new input and re-running again.
-  const selfTriggered = useRef(false);
+  const storage = extension.storage as MqCodeBlockStorage;
 
   const run = useCallback(
     async (currentQuery: string) => {
@@ -110,8 +109,11 @@ export function MqCodeBlockView({ node, updateAttributes, editor, extension }: N
         // doesn't keep producing no-op transactions once the live-update
         // effect below reacts to its own previous write.
         if (output !== resultRef.current) {
-          selfTriggered.current = true;
+          storage.selfTriggeredWrite = true;
           updateAttributes({ result: output });
+          queueMicrotask(() => {
+            storage.selfTriggeredWrite = false;
+          });
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
@@ -119,8 +121,13 @@ export function MqCodeBlockView({ node, updateAttributes, editor, extension }: N
         setRunning(false);
       }
     },
-    [runner, editor, extension, updateAttributes, scope, vaultFiles],
+    [runner, editor, extension, updateAttributes, scope, vaultFiles, storage],
   );
+
+  const runRef = useRef(run);
+  useEffect(() => {
+    runRef.current = run;
+  }, [run]);
 
   // Evaluate once on load if the block was opened with a query but no cached
   // result yet (e.g. a file opened for the first time this session). This
@@ -143,39 +150,48 @@ export function MqCodeBlockView({ node, updateAttributes, editor, extension }: N
   // - without this, every blur would schedule a redundant second run.
   const lastVaultFilesRef = useRef(vaultFiles);
 
-  // While showing the result (not editing the query), keep it live. Document
-  // scope re-runs against the document's current markdown whenever the
-  // document changes elsewhere, debounced so a burst of keystrokes only
-  // triggers one evaluation - only attached while `!editing`, so typing into
-  // this block's own query textarea (which itself updates a node attribute
-  // and so would otherwise be seen as a document change) can't trigger a run
-  // before blur. Vault scope has no single document to listen to; instead it
-  // re-runs whenever the vault index itself changes (another note saved).
-  useEffect(() => {
-    if (editing || !query.trim()) return;
+  const autoRerunCount = useRef(0);
+  const lastAutoRunAt = useRef(0);
+  const AUTO_RERUN_RESET_MS = 5000;
 
-    if (scope === "vault") {
-      if (lastVaultFilesRef.current === vaultFiles) return;
-      lastVaultFilesRef.current = vaultFiles;
-      const timer = setTimeout(() => void run(query), 400);
-      return () => clearTimeout(timer);
-    }
-
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const handleUpdate = () => {
-      if (selfTriggered.current) {
-        selfTriggered.current = false;
-        return;
+  const scheduleGuardedRerun = useCallback(
+    (currentQuery: string, delayMs: number): (() => void) | undefined => {
+      const now = Date.now();
+      if (now - lastAutoRunAt.current > AUTO_RERUN_RESET_MS) autoRerunCount.current = 0;
+      lastAutoRunAt.current = now;
+      if (autoRerunCount.current >= MAX_AUTO_RERUNS) {
+        setError("Stopped auto-re-evaluating after too many rapid changes - edit the query to retry.");
+        return undefined;
       }
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => void run(query), 400);
+      autoRerunCount.current += 1;
+      const timer = setTimeout(() => void runRef.current(currentQuery), delayMs);
+      return () => clearTimeout(timer);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (editing || !query.trim() || scope !== "document") return;
+
+    let cancelScheduled: (() => void) | undefined;
+    const handleUpdate = () => {
+      if (storage.selfTriggeredWrite) return;
+      cancelScheduled?.();
+      cancelScheduled = scheduleGuardedRerun(query, 400);
     };
     editor.on("update", handleUpdate);
     return () => {
       editor.off("update", handleUpdate);
-      if (timer) clearTimeout(timer);
+      cancelScheduled?.();
     };
-  }, [editing, query, editor, run, scope, vaultFiles]);
+  }, [editing, query, editor, scope, storage, scheduleGuardedRerun]);
+
+  useEffect(() => {
+    if (editing || !query.trim() || scope !== "vault") return;
+    if (lastVaultFilesRef.current === vaultFiles) return;
+    lastVaultFilesRef.current = vaultFiles;
+    return scheduleGuardedRerun(query, 400);
+  }, [editing, query, scope, vaultFiles, scheduleGuardedRerun]);
 
   // The editor itself also tries to claim focus when a file opens (see
   // Editor.tsx). Grabbing focus here via requestAnimationFrame instead of the

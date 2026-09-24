@@ -8,6 +8,10 @@ export type MqCodeBlockOptions = {
   serializeDocument: (editor: Editor) => string;
 };
 
+export type MqCodeBlockStorage = {
+  selfTriggeredWrite: boolean;
+};
+
 /**
  * A live `mq` query block. While focused it shows the editable query; once
  * you click away it evaluates the query against the document's current
@@ -15,7 +19,7 @@ export type MqCodeBlockOptions = {
  * leave it). The result is reflected straight back into the saved markdown
  * as an adjacent ```mq-result fence.
  */
-export const MqCodeBlock = Node.create<MqCodeBlockOptions>({
+export const MqCodeBlock = Node.create<MqCodeBlockOptions, MqCodeBlockStorage>({
   name: "mqCodeBlock",
   group: "block",
   atom: true,
@@ -25,6 +29,10 @@ export const MqCodeBlock = Node.create<MqCodeBlockOptions>({
     return {
       serializeDocument: () => "",
     };
+  },
+
+  addStorage() {
+    return { selfTriggeredWrite: false };
   },
 
   addAttributes() {
