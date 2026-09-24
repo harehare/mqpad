@@ -10,15 +10,23 @@ function ensureInitialized(): void {
 
 let renderCounter = 0;
 
-/**
- * Renders mermaid diagram source to an SVG string. `idPrefix` should be
- * stable per block instance; this still suffixes a per-call counter since
- * mermaid.render mounts a temporary DOM node under `id` and two in-flight
- * calls for the same block (e.g. a debounced re-render racing a prior one)
- * would otherwise collide.
- */
 export async function renderMermaid(idPrefix: string, source: string): Promise<string> {
   ensureInitialized();
-  const { svg } = await mermaid.render(`${idPrefix}-${renderCounter++}`, source);
-  return svg;
+  const container = document.createElement("div");
+  container.style.cssText = "position:fixed; top:-10000px; left:-10000px; visibility:hidden;";
+  document.body.appendChild(container);
+  try {
+    const { svg } = await mermaid.render(`${idPrefix}-${renderCounter++}`, source, container);
+    return svg;
+  } finally {
+    container.remove();
+  }
+}
+
+export function formatMermaidError(message: string): string {
+  return message
+    .split("\n")
+    .filter((line) => !/^-+\^$/.test(line.trim()))
+    .join("\n")
+    .trim();
 }
