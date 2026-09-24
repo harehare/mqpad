@@ -31,7 +31,11 @@ async function saveFileExternally(filename: string, blob: Blob): Promise<void> {
   vscodeApi.postMessage({ source: "mqpad-save-as", filename, content, encoding: "base64" });
 }
 
-const mqRunner = serializeMqRunner((query, content) => run(query, content, { inputFormat: "markdown" }));
+const MQ_QUERY_TIMEOUT_MS = 60_000;
+
+const mqRunner = serializeMqRunner((query, content) =>
+  run(query, content, { inputFormat: "markdown", timeoutMs: MQ_QUERY_TIMEOUT_MS }),
+);
 
 function openVaultPathSettings(): void {
   vscodeApi.postMessage({ source: "mqpad-open-settings" });
