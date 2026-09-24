@@ -1,6 +1,6 @@
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
-import { renderMermaid } from "../../highlight/mermaid";
+import { formatMermaidError, renderMermaid } from "../../highlight/mermaid";
 
 const RENDER_DEBOUNCE_MS = 300;
 
@@ -35,7 +35,7 @@ export function CodeBlockView({ node }: NodeViewProps) {
           if (!cancelled) setSvg(result);
         })
         .catch((err: unknown) => {
-          if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+          if (!cancelled) setError(formatMermaidError(err instanceof Error ? err.message : String(err)));
         });
     }, RENDER_DEBOUNCE_MS);
     return () => {

@@ -152,4 +152,94 @@ describe("mq code block editing", () => {
     });
     expect(callCount).toBe(callsAfterUpdate);
   });
+
+  it("doesn't cascade when one settled block's own write is seen by another block's live-update listener", async () => {
+    const fs = new OPFSFileSystem("vault");
+    installMockOpfs();
+    await fs.initialize();
+    await fs.writeFile(
+      "/note.md",
+      [
+        "# Hello",
+        "",
+        "```mq",
+        ".h1",
+        "```",
+        "",
+        "```mq-result",
+        "A0",
+        "```",
+        "",
+        "```mq",
+        ".h2",
+        "```",
+        "",
+        "```mq-result",
+        "B0",
+        "```",
+        "",
+        "```mq",
+        "```",
+      ].join("\n"),
+    );
+
+    const calls: string[] = [];
+    const mqRunner: MqRunner = {
+      run: async (query, content) => {
+        calls.push(query);
+        const triggered = content.includes("trigger");
+        if (query === ".h1") return triggered ? "A1" : "A0";
+        if (query === ".h2") return triggered ? "B1" : "B0";
+        return "";
+      },
+    };
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <App fs={fs} mqRunner={mqRunner} vaultRootLabel="vault" vaultRoot="vault" onVaultRootChange={() => {}} />,
+      );
+    });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
+    });
+
+    const fileItem = Array.from(container.querySelectorAll(".file-tree-name")).find(
+      (el) => el.textContent === "note.md",
+    );
+    await act(async () => {
+      fileItem!.closest(".file-tree-item")!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
+    });
+
+    expect(calls).toEqual([]);
+
+    const textarea = container.querySelector(".mqpad-mq-block-query") as HTMLTextAreaElement;
+    expect(textarea).toBeTruthy();
+    for (const ch of ["t", "r", "i", "g", "g", "e", "r"]) {
+      await act(async () => {
+        setNativeValue(textarea, textarea.value + ch);
+      });
+    }
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 600));
+    });
+
+    const results = Array.from(container.querySelectorAll(".mqpad-mq-block-result")).map((el) => el.textContent);
+    expect(results).toEqual(["A1", "B1"]);
+    expect(calls.filter((q) => q === ".h1")).toHaveLength(1);
+    expect(calls.filter((q) => q === ".h2")).toHaveLength(1);
+    const callsAfterSettling = calls.length;
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 600));
+    });
+    expect(calls.length).toBe(callsAfterSettling);
+  });
 });

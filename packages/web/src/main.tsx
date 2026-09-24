@@ -23,7 +23,11 @@ function pathFromHash(): string | undefined {
 const vaultRoot = getVaultRoot();
 const fs = new OPFSFileSystem(vaultRoot);
 
-const mqRunner = serializeMqRunner((query, content) => run(query, content, { inputFormat: "markdown" }));
+const MQ_QUERY_TIMEOUT_MS = 60_000;
+
+const mqRunner = serializeMqRunner((query, content) =>
+  run(query, content, { inputFormat: "markdown", timeoutMs: MQ_QUERY_TIMEOUT_MS }),
+);
 
 /**
  * "Preview mode": a `.md` file dropped onto the page opens directly via the

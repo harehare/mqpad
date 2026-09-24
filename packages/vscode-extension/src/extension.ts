@@ -229,6 +229,29 @@ class MqpadPreviewEditorProvider implements vscode.CustomTextEditorProvider {
   }
 }
 
+const MARKDOWN_EDITOR_ASSOCIATIONS: Record<string, string> = { "*.md": "mqpad.preview", "*.markdown": "mqpad.preview" };
+
+async function toggleDefaultEditor(): Promise<void> {
+  const config = vscode.workspace.getConfiguration();
+  const associations = { ...(config.get<Record<string, string>>("workbench.editorAssociations") ?? {}) };
+  const isDefault = Object.keys(MARKDOWN_EDITOR_ASSOCIATIONS).every(
+    (pattern) => associations[pattern] === "mqpad.preview",
+  );
+  for (const pattern of Object.keys(MARKDOWN_EDITOR_ASSOCIATIONS)) {
+    if (isDefault) {
+      delete associations[pattern];
+    } else {
+      associations[pattern] = "mqpad.preview";
+    }
+  }
+  await config.update("workbench.editorAssociations", associations, vscode.ConfigurationTarget.Workspace);
+  void vscode.window.showInformationMessage(
+    isDefault
+      ? "mqpad is no longer the default editor for Markdown files in this workspace."
+      : "mqpad is now the default editor for Markdown files in this workspace.",
+  );
+}
+
 export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand("mqpad.open", () => {
@@ -246,6 +269,12 @@ export function activate(context: vscode.ExtensionContext): void {
       if (!target) return;
       void vscode.commands.executeCommand("vscode.openWith", target, "mqpad.preview");
     }),
+    vscode.commands.registerCommand("mqpad.openAsText", (uri?: vscode.Uri) => {
+      const target = uri ?? vscode.window.activeTextEditor?.document.uri;
+      if (!target) return;
+      void vscode.commands.executeCommand("vscode.openWith", target, "default");
+    }),
+    vscode.commands.registerCommand("mqpad.toggleDefaultEditor", () => void toggleDefaultEditor()),
     vscode.window.registerCustomEditorProvider("mqpad.preview", new MqpadPreviewEditorProvider(context), {
       webviewOptions: { retainContextWhenHidden: true },
     }),
