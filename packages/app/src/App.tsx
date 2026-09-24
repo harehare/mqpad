@@ -84,6 +84,12 @@ export type AppProps = {
    * available to the webview itself.
    */
   saveFileExternally?: (filename: string, blob: Blob) => Promise<void>;
+  /**
+   * Whether the titlebar shows the mqpad logo/name. Defaults to true; the VS
+   * Code extension sets this to false since its own tab already identifies
+   * the panel, leaving the titlebar's action buttons more room.
+   */
+  showBrand?: boolean;
 };
 
 type OpenFile = {
@@ -143,6 +149,7 @@ export function App({
   quickOpenHotkeyEnabled = true,
   defaultSidebarVisible,
   saveFileExternally = async (filename, blob) => downloadBlob(filename, blob),
+  showBrand = true,
 }: AppProps) {
   const [files, setFiles] = useState<FileNode[]>([]);
   const [openFiles, setOpenFiles] = useState<Record<string, OpenFile>>({});
@@ -697,11 +704,13 @@ export function App({
       <VaultIndexProvider value={vaultFiles}>
         <AiProvider>
           <div className={`mqpad-app ${focusMode ? "mqpad-focus-mode" : ""}`}>
-            <div className="mqpad-titlebar">
-              <div className="mqpad-titlebar-brand">
-                <Logo size={18} />
-                <span className="mqpad-titlebar-title">mqpad</span>
-              </div>
+            <div className={`mqpad-titlebar ${showBrand ? "" : "mqpad-titlebar--no-brand"}`}>
+              {showBrand && (
+                <div className="mqpad-titlebar-brand">
+                  <Logo size={18} />
+                  <span className="mqpad-titlebar-title">mqpad</span>
+                </div>
+              )}
               <div className="mqpad-titlebar-actions">
                 <button
                   className={`mqpad-titlebar-settings ${sidebarVisible ? "active" : ""}`}

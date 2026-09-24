@@ -95,6 +95,7 @@ createRoot(rootEl).render(
       quickOpenHotkeyEnabled={false}
       defaultSidebarVisible={showFileTree}
       saveFileExternally={saveFileExternally}
+      showBrand={false}
     />
   </StrictMode>,
 );

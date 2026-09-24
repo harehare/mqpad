@@ -20,6 +20,10 @@
   flex-shrink: 0;
 }
 
+.mqpad-titlebar--no-brand {
+  justify-content: flex-end;
+}
+
 .mqpad-titlebar-brand {
   display: flex;
   align-items: center;
