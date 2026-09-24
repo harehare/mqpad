@@ -47,6 +47,15 @@
         "command": "mqpad.openFile",
         "title": "Open in mqpad",
         "icon": "$(open-preview)"
+      },
+      {
+        "command": "mqpad.openAsText",
+        "title": "Open as Text Editor",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "mqpad.toggleDefaultEditor",
+        "title": "mqpad: Toggle as Default Editor for Markdown Files"
       }
     ],
     "menus": {
@@ -60,7 +69,12 @@
       "editor/title": [
         {
           "command": "mqpad.openFile",
-          "when": "resourceExtname == .md || resourceExtname == .markdown",
+          "when": "(resourceExtname == .md || resourceExtname == .markdown) && activeCustomEditorId != mqpad.preview",
+          "group": "navigation"
+        },
+        {
+          "command": "mqpad.openAsText",
+          "when": "activeCustomEditorId == mqpad.preview",
           "group": "navigation"
         }
       ]
